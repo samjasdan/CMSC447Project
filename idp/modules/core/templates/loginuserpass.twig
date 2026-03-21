@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>myUMBC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <link rel="stylesheet" type="text/css" href="/idp/public/css/myumbc.css">
+</head>
+<body>
+    <div id="login">
+        <div id="logo"><a href="#" title="myUMBC Home"></a></div>
+        <div id="form">
+            <div class="top">
+                <form action="{{ formURL }}" method="post" name="upass" spellcheck="false">
+
+                    <h1>Log In<span class="login-create"> or <a href="https://accounts.yoursite.com/">Create an Account</a></span></h1>
+
+                    {% if errorcode %}
+                    <div class="error">
+                        {{ errorcodes['title'][errorcode]|trans(errorparams) }}
+                    </div>
+                    {% endif %}
+
+                    <div class="field">
+                        <label for="username">Email Address / Username / Campus ID</label>
+                        <input autocomplete="off"
+                               autocapitalize="off"
+                               autocorrect="off"
+                               id="username"
+                               size="20"
+                               maxlength="255"
+                               type="text"
+                               name="username"
+                               value="{{ username|default('') }}" />
+                    </div>
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <input autocomplete="off"
+                               autocapitalize="off"
+                               autocorrect="off"
+                               id="password"
+                               size="20"
+                               maxlength="255"
+                               type="password"
+                               name="password"
+                               value="" />
+                    </div>
+                    <div class="actions">
+                        <div class="secondary">
+                            <div><a href="https://yoursite.com/forgot-password">Forgot your password?</a></div>
+                        </div>
+                        <div class="primary">
+                            <input id="submitButton" value="Log In" class="button go large" type="submit" onClick="if(clickCount++>0){this.disabled='disabled'}" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="logout-warning">
+                <div class="first">When you are finished...</div>
+                <div class="second">LOG OUT &amp; CLOSE YOUR BROWSER</div>
+            </div>
+            <div class="bottom">
+                <p><strong>Important:</strong> Usage of computing resources is governed by the <a href="#">Responsible Computing Policy</a>.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var clickCount = 0;
+        window.setTimeout(function() {
+            window.location.href = "{{ formURL }}";
+        }, 1200000);
+        const ufield = document.getElementById('username');
+        const pfield = document.getElementById('password');
+        if (ufield.value.trim().length == 0) {
+            ufield.focus();
+        } else {
+            pfield.focus();
+        }
+    </script>
+</body>
+</html>
