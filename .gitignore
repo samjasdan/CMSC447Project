@@ -4,3 +4,5 @@
 !/htdocs/**
 !/database
 !/database/**
+!/miscellaneous
+!/miscellaneous/**
