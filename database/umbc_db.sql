@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 23, 2026 at 12:32 AM
+-- Generation Time: Mar 31, 2026 at 06:56 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -32,10 +32,56 @@ CREATE TABLE `umbc_accounts` (
   `first_name` varchar(60) NOT NULL,
   `last_name` varchar(60) NOT NULL,
   `umbc_email` varchar(100) NOT NULL,
-  `pword_hash` varchar(255) NOT NULL,
-  `session_id` varchar(4096) DEFAULT NULL,
-  `session_end` timestamp NULL DEFAULT NULL
-) ;
+  `pword_hash` varchar(320) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `umbc_accounts`
+--
+
+INSERT INTO `umbc_accounts` (`umbc_id`, `first_name`, `last_name`, `umbc_email`, `pword_hash`) VALUES
+('AR36062', 'Avi', 'Hill', 'ahill@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('BD30033', 'Sophia', 'Carter', 'scarter@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('BZ51347', 'Molemo', 'Anderson', 'manderson@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('CM22676', 'Elvis', 'Miller', 'emiller@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('CT93227', 'Lily', 'Adams', 'ladams@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('DA46048', 'Abe', 'Green', 'agreen@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('DV80381', 'Zoya', 'Campbell', 'zcampbell@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('EI28301', 'Rania', 'Robinson', 'rrobinson@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('FZ99192', 'Susanna', 'Green', 'sgreen@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('GH76237', 'Aren', 'Garcia', 'agarcia@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('GW19116', 'Javan', 'Torres', 'jtorres@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('GY54118', 'Dani', 'Martinez', 'dmartinez@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('HD59823', 'Kaila', 'Garcia', 'kgarcia@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('HE23434', 'Adamo', 'Thomas', 'athomas@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('HO87236', 'Bridget', 'Clark', 'bclark@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('IC37653', 'Molly', 'Sanchez', 'msanchez@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('IW99593', 'Lillian', 'Nelson', 'lnelson@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('KY17331', 'Michael', 'Baker', 'mbaker@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('LL37460', 'Kodi', 'Hernandez', 'khernandez@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('LT44671', 'Himani', 'Thompson', 'hthompson@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('MC82357', 'Ini', 'Davis', 'idavis@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('ML38746', 'Shrikant', 'Nguyen', 'snguyen@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('NB13905', 'Angela', 'Nguyen', 'anguyen@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('NK46421', 'Chiara', 'Hall', 'chall@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('OM45382', 'Max A.', 'Hernandez', 'mhernandez1@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('OU57819', 'Karen', 'Moore', 'kmoore@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('PM94259', 'O\'Tega', 'Adams', 'oadams@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('QP21915', 'Sina', 'Rodriguez', 'srodriguez@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('RA99166', 'Zach', 'Taylor', 'ztaylor@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('RX42087', 'Manav', 'Hernandez', 'mhernandez@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('TC60432', 'Theo', 'Ramirez', 'tramirez@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('TO79352', 'Tristan', 'Harris', 'tharris@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('UT57400', 'Iniya', 'Jackson', 'ijackson@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('UW81426', 'Aya', 'Rivera', 'arivera@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('VH47930', 'Joseph', 'Williams', 'jwilliams@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('WK37869', 'Moyo', 'Torres', 'mtorres@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('WR38785', 'Max M.', 'Green', 'mgreen@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('XO80284', 'Ian', 'Williams', 'iwilliams@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('XR21395', 'Akanksha', 'Baker', 'abaker@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('XR80644', 'Shakib', 'Thomas', 'sthomas@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('XS66155', 'Shayan', 'Taylor', 'staylor@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e'),
+('ZA30926', 'Chelsea', 'Moore', 'cmoore@umbc.edu', 'b1923b6d56628956cb61deea096fd3453985cdc2e5dba766fc7495c409dd3a7e');
 
 -- --------------------------------------------------------
 
@@ -45,10 +91,79 @@ CREATE TABLE `umbc_accounts` (
 
 CREATE TABLE `umbc_courses` (
   `course_id` int(11) NOT NULL,
-  `course_subject` char(4) NOT NULL,
-  `course_code` varchar(4) NOT NULL,
+  `course_subject` varchar(8) NOT NULL,
+  `course_code` varchar(8) NOT NULL,
   `course_name` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `umbc_courses`
+--
+
+INSERT INTO `umbc_courses` (`course_id`, `course_subject`, `course_code`, `course_name`) VALUES
+(10000, 'BIOL', '101', 'Concepts of Biology'),
+(10001, 'BIOL', '140', 'Foundations of Biology: Ecology and Evolution'),
+(10002, 'BIOL', '141', 'Foundations of Biology: Cells, Energy and Organisms'),
+(10003, 'BIOL', '251', 'Human Anatomy and Physiology I'),
+(10004, 'BIOL', '273', 'Microbiology for Allied Health'),
+(10005, 'BIOL', '302', 'Molecular and General Genetics'),
+(10006, 'BIOL', '303', 'Cell Biology'),
+(10007, 'BIOL', '430', 'Biological Chemistry'),
+(10008, 'CHEM', '100', 'The Chemical World'),
+(10009, 'CHEM', '101', 'Principles of Chemistry I'),
+(10010, 'CHEM', '102', 'Principles of Chemistry II'),
+(10011, 'CHEM', '120', 'Introduction to General, Organic, and Biochemistry'),
+(10012, 'CHEM', '300', 'Analytical Chemistry'),
+(10013, 'CHEM', '303', 'Physical Chemistry for the Biochemical Sciences'),
+(10014, 'CHEM', '351', 'Organic Chemistry I'),
+(10015, 'CHEM', '352', 'Organic Chemistry II'),
+(10016, 'CMPE', '212', 'Principles of Digital Design'),
+(10017, 'CMPE', '306', 'Introductory Circuit Theory'),
+(10018, 'CMPE', '314', 'Principles of Electronic Circuits'),
+(10019, 'CMSC', '201', 'Computer Science I'),
+(10020, 'CMSC', '202', 'Computer Science II'),
+(10021, 'CMSC', '203', 'Discrete Structures'),
+(10022, 'CMSC', '313', 'Computer Organization and Assembly Language Programming'),
+(10023, 'CMSC', '331', 'Principles of Programming Language'),
+(10024, 'CMSC', '341', 'Data Structures'),
+(10025, 'CMSC', '411', 'Computer Architecture'),
+(10026, 'CMSC', '421', 'Principles of Operating Systems'),
+(10027, 'CMSC', '426', 'Principles of Computer Security'),
+(10028, 'CMSC', '441', 'Design and Analysis of Algorithms'),
+(10029, 'CMSC', '471', 'Introduction to Artificial Intelligence'),
+(10030, 'ECON', '101', 'Principles of Microeconomics'),
+(10031, 'ECON', '102', 'Principles of Macroeconomics'),
+(10032, 'GES', '102', 'People, Place, and Environment: A Global Geographic Perspective'),
+(10033, 'GES', '110', 'The Changing Earth: Climate, Ecosystems, Water, and Landscapes'),
+(10034, 'GES', '120', 'Environmental Science and Conservation'),
+(10035, 'IS', '147', 'Introduction to Computer Programming'),
+(10036, 'IS', '247', 'Computer Programming II'),
+(10037, 'IS', '300', 'Management Information Systems'),
+(10038, 'IS', '310', 'Software and Hardware Concepts'),
+(10039, 'MATH', '104', 'Quantitative Literacy'),
+(10040, 'MATH', '106', 'Algebra and Elementary Functions'),
+(10041, 'MATH', '150', 'Precalculus Mathematics'),
+(10042, 'MATH', '151', 'Calculus and Analytic Geometry I'),
+(10043, 'MATH', '152', 'Calculus and Analytic Geometry II'),
+(10044, 'MATH', '155', 'Applied Calculus'),
+(10045, 'MATH', '215', 'Applied Finite Mathematics'),
+(10046, 'MATH', '225', 'Introduction to Differential Equations'),
+(10047, 'MATH', '251', 'Multivariable Calculus'),
+(10048, 'MATH', '300', 'Introduction to Mathematical Reasoning'),
+(10049, 'MATH', '301', 'Introduction to Contemporary Mathematics'),
+(10050, 'PHYS', '111', 'Basic Physics I'),
+(10051, 'PHYS', '112', 'Basic Physics II'),
+(10052, 'PHYS', '121', 'Introductory Physics I'),
+(10053, 'PHYS', '122', 'Introductory Physics II'),
+(10054, 'SCI', '100', 'Science of Water; An Interdisciplinary Study'),
+(10055, 'SPAN', '101', 'Elementary Spanish I'),
+(10056, 'SPAN', '102', 'Elementary Spanish II'),
+(10057, 'SPAN', '201', 'Intermediate Spanish I'),
+(10058, 'SPAN', '202', 'Intermediate Spanish II'),
+(10059, 'STAT', '121', 'Introduction to Statistics for the Social Sciences'),
+(10060, 'STAT', '350', 'Statistics with Applications in the Biological Sciences'),
+(10061, 'STAT', '351', 'Applied Statistics for Business and Economics'),
+(10062, 'STAT', '355', 'Introduction to Probability and Statistics for Scientists and Engineers');
 
 -- --------------------------------------------------------
 
@@ -57,9 +172,27 @@ CREATE TABLE `umbc_courses` (
 --
 
 CREATE TABLE `umbc_subjects` (
-  `subject_code` char(4) NOT NULL,
-  `subject_name` varchar(64) NOT NULL
+  `subject_code` varchar(8) NOT NULL,
+  `subject_name` varchar(128) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `umbc_subjects`
+--
+
+INSERT INTO `umbc_subjects` (`subject_code`, `subject_name`) VALUES
+('BIOL', 'Biology'),
+('CHEM', 'Chemistry'),
+('CMPE', 'Computer Engineering'),
+('CMSC', 'Computer Science'),
+('ECON', 'Economics'),
+('GES', 'Geographical and Environmental Systems'),
+('IS', 'Information Systems'),
+('MATH', 'Mathematics'),
+('PHYS', 'Physics'),
+('SCI', 'Science'),
+('SPAN', 'Spanish'),
+('STAT', 'Statistics');
 
 --
 -- Indexes for dumped tables
@@ -71,7 +204,6 @@ CREATE TABLE `umbc_subjects` (
 ALTER TABLE `umbc_accounts`
   ADD PRIMARY KEY (`umbc_id`),
   ADD UNIQUE KEY `umbc_email` (`umbc_email`),
-  ADD UNIQUE KEY `session_id` (`session_id`) USING HASH,
   ADD KEY `idx_first_name` (`first_name`);
 
 --
