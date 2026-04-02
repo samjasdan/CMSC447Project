@@ -189,7 +189,18 @@ $config = [
      * A possible way to generate a random salt is by running the following command from a unix shell:
      * LC_ALL=C tr -c -d '0123456789abcdefghijklmnopqrstuvwxyz' </dev/urandom | dd bs=32 count=1 2>/dev/null;echo
      */
-    'secretsalt' => 'defaultsecretsalt',
+
+    /*
+     * Generated in Windows PowerShell with: 
+     * $chars = '0123456789abcdefghijklmnopqrstuvwxyz'
+     * $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+     * $bytes = New-Object byte[] 32
+     * $rng.GetBytes($bytes)
+     * -join ($bytes | ForEach-Object { $chars[$_ % $chars.Length] })
+    */
+    
+    'secretsalt' => 'nl7m46nod46km6nlk0ey8c5bzrp3zp97',
+    
 
     /*
      * This password must be kept secret, and modified from the default value 123.
