@@ -328,13 +328,13 @@ add_action('wp_enqueue_scripts', function() {
     ]);
 });
 
-
+// Schedule REST API
 add_action('rest_api_init', function() {
     register_rest_route('asc-tutoring/v1', '/schedule', [
         'methods'             => 'POST',
         'callback'            => 'create_schedule',
         'permission_callback' => function() {
-            return current_user_can('staff_control');
+            return current_user_can('admin_control');
         },
         'args' => [
             'user_id' => [
@@ -366,7 +366,7 @@ add_action('rest_api_init', function() {
         'methods'             => 'DELETE',
         'callback'            => 'delete_schedule',
         'permission_callback' => function() {
-            return current_user_can('staff_control');
+            return current_user_can('admin_control');
         },
         'args' => [
             'schedule_id' => [
@@ -381,7 +381,7 @@ add_action('rest_api_init', function() {
     'methods'             => 'PATCH',
     'callback'            => 'update_schedule',
     'permission_callback' => function() {
-        return current_user_can('staff_control');
+        return current_user_can('admin_control');
     },
     'args' => [
         'schedule_id' => [
@@ -415,6 +415,97 @@ add_action('rest_api_init', function() {
 ]);
 });
 
+// Events REST API
+add_action('rest_api_init', function() {
+    register_rest_route('asc-tutoring/v1', '/events', [
+        'methods'             => 'POST',
+        'callback'            => 'create_event',
+        'permission_callback' => function() {
+            return current_user_can('staff_control');
+        },
+        'args' => [
+            'event_type' => [
+                'required'          => true,
+                'validate_callback' => 'is_numeric',
+                'sanitize_callback' => 'absint'
+            ],
+            'user_id' => [
+                'required'          => true,
+                'validate_callback' => 'is_numeric',
+                'sanitize_callback' => 'absint'
+            ],
+            'start_day' => [
+                'required'          => true,
+                'sanitize_callback' => 'sanitize_date_field',
+            ],
+            'final_day' => [
+                'required'          => false,
+                'sanitize_callback' => 'sanitize_date_field',
+                'defualt'           => 'null'
+            ],
+            'duration' => [
+                'required'          => false,
+                'validate_callback' => 'is_numeric',
+                'sanitize_callback' => 'absint',
+                'defualt'           => 'null'
+            ],
+            
+        ],
+    ]);
+
+    register_rest_route('asc-tutoring/v1', '/events/(?P<event_id>\d+)', [
+        'methods'             => 'DELETE',
+        'callback'            => 'delete_event',
+        'permission_callback' => function() {
+            return current_user_can('staff_control');
+        },
+        'args' => [
+            'event_id' => [
+                'required'          => true,
+                'validate_callback' => 'is_numeric',
+                'sanitize_callback' => 'absint'
+            ],
+        ],
+    ]);
+
+    register_rest_route('asc-tutoring/v1', '/events/(?P<event_id>\d+)', [
+    'methods'             => 'PATCH',
+    'callback'            => 'update_event',
+    'permission_callback' => function() {
+        return current_user_can('staff_control');
+    },
+    'args' => [
+        'event_id' => [
+            'required'          => true,
+            'validate_callback' => 'is_numeric',
+            'sanitize_callback' => 'absint',
+        ],
+        'event_type' => [
+            'required'          => true,
+            'sanitize_callback' => 'sanitize_text_field'
+        ],
+        'user_id' => [
+            'required'          => true,
+            'validate_callback' => 'is_numeric',
+            'sanitize_callback' => 'absint'
+        ],
+        'start_day' => [
+            'required'          => true,
+            'sanitize_callback' => 'sanitize_date_field',
+        ],
+        'final_day' => [
+            'required'          => true,
+            'sanitize_callback' => 'sanitize_date_field',
+        ],
+        'duration' => [
+            'required'          => true,
+            'validate_callback' => 'is_numeric',
+            'sanitize_callback' => 'absint'
+        ],
+    ],
+]);
+});
+
 
 function sanitize_time_field($timeStr) {
     if (strtolower($timeStr) === 'noon') {
@@ -443,6 +534,19 @@ function sanitize_day_field($day) {
     $day = ucfirst(strtolower($day));
 
     return $days[$day] ?? false;
+}
+
+
+function sanitize_date_field($date) {
+    if ($date == "null") {
+        return null;
+    }
+    $date = DateTime::createFromFormat('Y-m-d', $date);
+
+    if ($date === false) {
+        return false;
+    }
+    return $date->format('Y-m-d');
 }
 
 
@@ -485,10 +589,7 @@ function create_schedule(WP_REST_Request $request) {
     wp_cache_delete(U_SCHEDULE_CACHE_KEY, USER_CACHE_GROUP);
     wp_cache_delete(M_SCHEDULE_CACHE_KEY, MANAGEMENT_CACHE_GROUP);
 
-    return rest_ensure_response([
-        'created'     => true,
-        'schedule_id' => $wpdb->insert_id,
-    ]);
+    return rest_ensure_response(['created' => true, 'schedule_id' => $wpdb->insert_id]);
 }
 
 
@@ -566,6 +667,120 @@ function update_schedule(WP_REST_Request $request) {
     return rest_ensure_response(['updated' => true, 'schedule_id' => $schedule_id]);
 }
 
+
+function create_event(WP_REST_Request $request) {
+    global $wpdb;
+    $event_type = $request->get_param('event_type');
+    $user_id = $request->get_param('user_id');
+    $start_day = $request->get_param('start_day');
+    $final_day = $request->get_param('final_day');
+    $duration = $request->get_param('$duration');
+
+    if ($start_day === false || $start_day === null) {
+        return new WP_Error('invalid_start_day', 'Invalid start day', ['status' => 400]);
+    }
+
+    if ($final_day === false) {
+        return new WP_Error('invalid_final_day', 'Invalid final day', ['status' => 400]);
+    }
+
+    if ($duration == "null") {
+        $duration = null;
+    }
+
+    $result = $wpdb->insert(
+        'events',
+        [
+            '$event_type' => $event_type
+            'user_id'     => $user_id,
+            'start_day'   => $start_day,
+            'final_day' => $final_day,
+            'duration'  => $duration
+        ],
+        ['%d', '%d', '%s', '%s', '%d']
+    );
+
+    if ($result === false) {
+        return new WP_Error('db_error', $wpdb->last_error, ['status' => 500]);
+    }
+
+    wp_cache_delete(EVENTS_CACHE_KEY, USER_CACHE_GROUP);
+
+    return rest_ensure_response(['created' => true, 'event_id' => $wpdb->insert_id]);
+}
+
+
+function delete_event(WP_REST_Request $request) {
+    global $wpdb;
+    $event_id = $request->get_param('event_id');
+    
+    $result = $wpdb->delete(
+        'events',
+        ['event_id' => $event_id],
+        ['%d']
+    );
+
+    if ($result === false) {
+        return new WP_Error('db_error', 'Failed to delete event', ['status' => 500]);
+    }
+
+    if ($result === 0) {
+        return new WP_Error('not_found', 'No event found with that ID', ['status' => 404]);
+    }
+    
+    wp_cache_delete(EVENTS_CACHE_KEY, USER_CACHE_GROUP);
+
+    return rest_ensure_response(['deleted' => true, 'event_id' => $schedule_id]);
+}
+
+
+function update_event(WP_REST_Request $request) {
+    global $wpdb;
+    $event_id = $request->get_param('event_id');
+    $event_type = $request->get_param('event_type');
+    $user_id = $request->get_param('user_id');
+    $start_day = $request->get_param('start_day');
+    $final_day = $request->get_param('final_day');
+    $duration = $request->get_param('$duration');
+
+    if ($start_day === false || $start_day === null) {
+        return new WP_Error('invalid_start_day', 'Invalid start day', ['status' => 400]);
+    }
+
+    if ($final_day === false) {
+        return new WP_Error('invalid_final_day', 'Invalid final day', ['status' => 400]);
+    }
+
+    if ($duration == "null") {
+        $duration = null;
+    }
+
+    $result = $wpdb->update(
+        'events',
+        [
+            '$event_type' => $event_type
+            'user_id'     => $user_id,
+            'start_day'   => $start_day,
+            'final_day' => $final_day,
+            'duration'  => $duration
+        ],
+        ['event_id' => $event_id],
+        ['%d', '%d', '%s', '%s', '%s'],
+        ['%d']
+    );
+
+    if ($result === false) {
+        return new WP_Error('db_error', $wpdb->last_error, ['status' => 500]);
+    }
+
+    if ($result === 0) {
+        return new WP_Error('not_found', 'No schedule found with that ID', ['status' => 404]);
+    }
+
+    wp_cache_delete(EVENTS_CACHE_KEY, USER_CACHE_GROUP);
+
+    return rest_ensure_response(['updated' => true, 'event_id' => $event_id]);
+}
 
 
 add_action('template_redirect', function() {

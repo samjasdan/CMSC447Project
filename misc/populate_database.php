@@ -223,6 +223,7 @@ function populate_users(&$data, $umbcPdo, $ascPdo, &$users) {
 
 function populate_schedule(&$data, $umbcPdo, $ascPdo, &$courses, &$users) {
     static $ascStmt = null;
+    static $updateStmt = null;
     $DAYS = [
         "Monday" => "MON",
         "Tuesday" => "TUE",
@@ -291,8 +292,8 @@ function populate_events($data, $ascPdo, &$users, &$eventTypes) {
                                      (:event_type, :user_id, :start_day, :final_day, :duration)");
     }
 
-    $data["start_day"] = create_datetime(intval($data["start_day"]));
-    $data["final_day"] = create_datetime(intval($data["final_day"]));
+    $data["start_day"] = create_datetime($data["start_day"]);
+    $data["final_day"] = create_datetime($data["final_day"]);
 
     $ascStmt->execute([
         ":event_type" => $eventTypes[$data["event_name"]],
@@ -468,5 +469,9 @@ function create_asc_events($ascPdo) {
 }
 
 function create_datetime($dayShift) {
-    return $dayShift !== "NULL" ? (new DateTime())->modify("+{$dayShift} days")->format('Y-m-d H:i:s') : null;
+    if ($dayShift != "NULL") {
+        $dayShift = intval($dayShift);
+        return (new DateTime())->modify("+{$dayShift} days")->format('Y-m-d');
+    }
+    return null;
 }
