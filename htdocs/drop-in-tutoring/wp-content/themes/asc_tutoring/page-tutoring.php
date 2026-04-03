@@ -25,7 +25,7 @@ function tutoring_format_time($time) {
     $formatted = str_replace(['am', 'pm'], ['a.m.', 'p.m.'], 
                              DateTime::createFromFormat('H:i:s', $time)->format('g:i a'));
     $formatted = str_replace(['12:00 p.m.', '12:00 a.m.'], ['Noon', 'Midnight'], strtolower($formatted));
-    return ucwords($formatted);
+    return $formatted;
 }
 
 function tutoring_subject_heading($subject) {
@@ -80,7 +80,11 @@ function tutoring_subject_heading($subject) {
         </p>
 
         <h2>Available Courses</h2>
-        <ul aria-label="Available courses navigation" class="list-inline">
+        <ul 
+          aria-label="Available courses navigation" 
+          class="list-inline"
+          style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0px 12px; padding: 0; list-style: none;"
+        >
           <li>
             <button type="button" class="button button-secondary subject-filter-button active" data-subject="all">
               Show All
