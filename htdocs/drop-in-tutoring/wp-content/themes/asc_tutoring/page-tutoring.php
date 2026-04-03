@@ -25,7 +25,7 @@ function tutoring_format_time($time) {
     $formatted = str_replace(['am', 'pm'], ['a.m.', 'p.m.'], 
                              DateTime::createFromFormat('H:i:s', $time)->format('g:i a'));
     $formatted = str_replace(['12:00 p.m.', '12:00 a.m.'], ['Noon', 'Midnight'], strtolower($formatted));
-    return ucwords($formatted);
+    return $formatted;
 }
 
 function tutoring_subject_heading($subject) {
