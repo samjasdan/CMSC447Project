@@ -6,32 +6,6 @@ get_header();
 
 [$uSubjects, $uCourses, $uSchedule, $eventTypes, $uEvents] = user_query();
 
-function tutoring_anchor_from_subject($subject) {
-    return strtolower($subject['subject_code']);
-}
-
-function tutoring_day_label($day) {
-    $map = [
-        'MON' => 'Monday',
-        'TUE' => 'Tuesday',
-        'WED' => 'Wednesday',
-        'THU' => 'Thursday',
-        'FRI' => 'Friday',
-    ];
-    return $map[$day] ?? $day;
-}
-
-function tutoring_format_time($time) {
-    $formatted = str_replace(['am', 'pm'], ['a.m.', 'p.m.'], 
-                             DateTime::createFromFormat('H:i:s', $time)->format('g:i a'));
-    $formatted = str_replace(['12:00 p.m.', '12:00 a.m.'], ['Noon', 'Midnight'], strtolower($formatted));
-    return $formatted;
-}
-
-function tutoring_subject_heading($subject) {
-    return esc_html($subject['subject_name']) . ' Courses';
-}
-
 ?>
 
 <main id="main" class="container">
@@ -39,10 +13,6 @@ function tutoring_subject_heading($subject) {
 
   <div class="main-content">
     <article id="post-dropin" class="page type-page status-publish hentry">
-      <a class="button button-primary admin-nav-button" href="<?php echo esc_url(get_permalink(get_page_by_path('tutoring-admin'))); ?>">
-        Admin Login
-      </a>
-
       <header class="entry-header">
         <h1 class="entry-title">Drop-In Tutoring</h1>
       </header>

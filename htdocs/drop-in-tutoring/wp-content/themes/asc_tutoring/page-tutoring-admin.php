@@ -4,70 +4,25 @@ Template Name: Tutoring Admin
 */
 get_header();
 
-$can_staff = current_user_can('staff_control');
-$can_admin = current_user_can('admin_control');
+$is_staff = current_user_can('staff_control');
+$is_admin = current_user_can('admin_control');
 
-if ($can_staff || $can_admin) {
-    [$mSubjects, $mCourses, $users, $mSchedule, $eventTypes, $mEvents] = management_query();
-} else {
-    $mSubjects = [];
-    $mCourses = [];
-    $users = [];
-    $mSchedule = [];
-    $eventTypes = [];
-    $mEvents = [];
+if (!$is_staff) {
+    wp_redirect(home_url());
 }
 
-function tutoring_admin_day_label($day) {
-    $map = [
-        'MON' => 'Monday',
-        'TUE' => 'Tuesday',
-        'WED' => 'Wednesday',
-        'THU' => 'Thursday',
-        'FRI' => 'Friday',
-    ];
-    return $map[$day] ?? $day;
-}
-
-function tutoring_admin_time_label($time) {
-    if (!$time) {
-        return '';
-    }
-
-    $dt = DateTime::createFromFormat('H:i:s', $time);
-    if (!$dt) {
-        return esc_html($time);
-    }
-
-    $formatted = strtolower($dt->format('g:i a'));
-    $formatted = str_replace(['am', 'pm'], ['a.m.', 'p.m.'], $formatted);
-    $formatted = str_replace(['12:00 a.m.', '12:00 p.m.'], ['Midnight', 'Noon'], $formatted);
-
-    return $formatted;
-}
-
-function tutoring_admin_user_label($user) {
-    $name = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
-    if ($name === '') {
-        $name = $user['user_login'];
-    }
-    return $name . ' (' . $user['user_login'] . ')';
-}
+[$mSubjects, $mCourses, $users, $mSchedule, $eventTypes, $mEvents] = management_query();
 
 $users_by_id = [];
 foreach ($users as $user) {
     $users_by_id[$user['user_id']] = $user;
 }
 
-$courses_by_id = [];
-foreach ($mCourses as $course) {
-    $courses_by_id[$course['course_id']] = $course;
-}
-
 $event_types_by_id = [];
 foreach ($eventTypes as $eventType) {
     $event_types_by_id[$eventType['event_type_id']] = $eventType;
 }
+
 ?>
 
 <main id="main" class="container">
@@ -75,16 +30,13 @@ foreach ($eventTypes as $eventType) {
 
   <div class="main-content">
     <article id="post-tutoring-admin" class="page type-page status-publish hentry">
-      <a class="button button-secondary admin-nav-button" href="<?php echo esc_url(get_permalink(get_page_by_path('drop-in-tutoring'))); ?>">
-        Drop-In Tutoring Page
-      </a>
 
       <header class="entry-header">
         <h1 class="entry-title">Tutoring Admin</h1>
       </header>
 
       <div class="entry-content">
-        <?php if (!$can_staff && !$can_admin) : ?>
+        <?php if (!$is_staff && !$is_admin) : ?>
           <section class="admin-panel">
             <p>You must be logged in with an authorized staff or admin account to access tutoring controls.</p>
           </section>
@@ -93,16 +45,16 @@ foreach ($eventTypes as $eventType) {
           <div class="tutoring-admin-message" id="tutoring-admin-message" hidden></div>
 
           <nav class="tutoring-admin-tabs" aria-label="Admin sections">
-            <?php if ($can_staff || $can_admin) : ?>
+            <?php if ($is_staff || $is_admin) : ?>
               <button type="button" class="button button-primary admin-tab active" data-tab="events">Tutor Events</button>
             <?php endif; ?>
-            <?php if ($can_admin) : ?>
+            <?php if ($is_admin) : ?>
               <button type="button" class="button button-primary admin-tab" data-tab="schedule">Schedule</button>
               <button type="button" class="button button-primary admin-tab" data-tab="accounts">Accounts</button>
             <?php endif; ?>
           </nav>
 
-          <?php if ($can_staff || $can_admin) : ?>
+          <?php if ($is_staff || $is_admin) : ?>
           <section class="admin-section active" id="admin-tab-events">
             <h2>Tutor Events</h2>
             <p>Create, update, or remove late arrivals, call-outs, early departures, and related shift events.</p>
@@ -116,7 +68,7 @@ foreach ($eventTypes as $eventType) {
                   <select id="event_user_id" name="user_id" required>
                     <option value="">Select tutor</option>
                     <?php foreach ($users as $user) : ?>
-                      <?php if (($user['roles'] ?? '') === 'tutor' || str_contains((string)($user['roles'] ?? ''), 'tutor')) : ?>
+                      <?php if (in_array('tutor', (array) $user['roles'], true)) : ?>
                         <option value="<?php echo esc_attr($user['user_id']); ?>">
                           <?php echo esc_html(tutoring_admin_user_label($user)); ?>
                         </option>
@@ -131,23 +83,25 @@ foreach ($eventTypes as $eventType) {
                     <option value="">Select type</option>
                     <?php foreach ($eventTypes as $eventType) : ?>
                       <option value="<?php echo esc_attr($eventType['event_type_id']); ?>">
-                        <?php echo esc_html($eventType['event_name']); ?>
+                        <?php echo esc_html(display_snake_case($eventType['event_name'])); ?>
                       </option>
                     <?php endforeach; ?>
                   </select>
                 </div>
 
-                <div>
-                  <label for="start_day"><strong>Start Date</strong></label>
-                  <input type="date" id="start_day" name="start_day" required />
+                <div id="date-range-fields">
+                  <div>
+                    <label for="start_day"><strong>Start Date</strong></label>
+                    <input type="date" id="start_day" name="start_day" required />
+                  </div>
+
+                  <div>
+                    <label for="final_day"><strong>Final Date</strong></label>
+                    <input type="date" id="final_day" name="final_day" />
+                  </div>
                 </div>
 
-                <div>
-                  <label for="final_day"><strong>Final Date</strong></label>
-                  <input type="date" id="final_day" name="final_day" />
-                </div>
-
-                <div>
+                <div id="duration-field">
                   <label for="duration"><strong>Duration (minutes)</strong></label>
                   <input type="number" id="duration" name="duration" min="0" step="1" />
                 </div>
@@ -163,7 +117,6 @@ foreach ($eventTypes as $eventType) {
               <table class="umbc-table admin-table" id="events-table">
                 <thead>
                   <tr>
-                    <th>Event ID</th>
                     <th>Tutor</th>
                     <th>Type</th>
                     <th>Start</th>
@@ -175,18 +128,17 @@ foreach ($eventTypes as $eventType) {
                 <tbody>
                   <?php foreach ($mEvents as $event) : ?>
                     <?php $event_user = $users_by_id[$event['user_id']] ?? null; ?>
-                    <?php $event_type = $event_types_by_id[$event['event_type_id']] ?? null; ?>
+                    <?php $event_type = $event_types_by_id[$event['event_type']] ?? null; ?>
                     <tr
                       data-event-id="<?php echo esc_attr($event['event_id']); ?>"
                       data-user-id="<?php echo esc_attr($event['user_id']); ?>"
-                      data-event-type="<?php echo esc_attr($event['event_type_id']); ?>"
+                      data-event-type="<?php echo esc_attr($event['event_type']); ?>"
                       data-start-day="<?php echo esc_attr($event['start_day']); ?>"
                       data-final-day="<?php echo esc_attr($event['final_day'] ?? ''); ?>"
                       data-duration="<?php echo esc_attr($event['duration'] ?? ''); ?>"
                     >
-                      <td><?php echo esc_html($event['event_id']); ?></td>
                       <td><?php echo esc_html($event_user ? tutoring_admin_user_label($event_user) : $event['user_id']); ?></td>
-                      <td><?php echo esc_html($event_type['event_name'] ?? $event['event_type_id']); ?></td>
+                      <td><?php echo esc_html(display_snake_case($event_type['event_name'] ?? $event['event_type'])); ?></td>
                       <td><?php echo esc_html($event['start_day']); ?></td>
                       <td><?php echo esc_html($event['final_day'] ?: '—'); ?></td>
                       <td><?php echo esc_html($event['duration'] !== null ? $event['duration'] : '—'); ?></td>
@@ -202,7 +154,7 @@ foreach ($eventTypes as $eventType) {
           </section>
           <?php endif; ?>
 
-          <?php if ($can_admin) : ?>
+          <?php if ($is_admin) : ?>
           <section class="admin-section" id="admin-tab-schedule">
             <h2>Schedule Management</h2>
             <p>Add, update, and remove tutoring time slots. New courses can also be added through the same form.</p>
@@ -216,7 +168,7 @@ foreach ($eventTypes as $eventType) {
                   <select id="schedule_user_id" name="user_id" required>
                     <option value="">Select tutor</option>
                     <?php foreach ($users as $user) : ?>
-                      <?php if (($user['roles'] ?? '') === 'tutor' || str_contains((string)($user['roles'] ?? ''), 'tutor')) : ?>
+                      <?php if (in_array('tutor', (array) $user['roles'], true)) : ?>
                         <option value="<?php echo esc_attr($user['user_id']); ?>">
                           <?php echo esc_html(tutoring_admin_user_label($user)); ?>
                         </option>
@@ -229,12 +181,12 @@ foreach ($eventTypes as $eventType) {
                   <label for="schedule_course_lookup"><strong>Select Course</strong></label>
                   <select id="schedule_course_lookup" name="schedule_course_lookup">
                     <option value="">Select a course</option>
+                    <?php foreach ($mCourses as $course) : ?>
+                      <option value="<?php echo esc_attr(json_encode($course)); ?>">
+                        <?php echo esc_html($course['course_subject'] . ' ' . $course['course_code']); ?>
+                      </option>
+                    <?php endforeach; ?>
                   </select>
-                </div>
-
-                <div>
-                  <label for="schedule_course_id"><strong>Course ID</strong></label>
-                  <input type="number" id="schedule_course_id" name="course_id" required />
                 </div>
 
                 <div>
@@ -258,26 +210,25 @@ foreach ($eventTypes as $eventType) {
                   <label for="schedule_end_time"><strong>End Time</strong></label>
                   <input type="text" id="schedule_end_time" name="end_time" placeholder="ex: 2:00 pm" required />
                 </div>
+
+                <input type="hidden" id="schedule_course_id" name="course_id" required />
+
               </div>
 
               <details class="admin-details">
                 <summary><strong>New course / subject fields</strong> (only needed when the course ID does not already exist)</summary>
                 <div class="admin-grid">
-                  <div>
-                    <label for="course_subject"><strong>Subject Code</strong></label>
-                    <input type="text" id="course_subject" name="course_subject" placeholder="CMSC" />
-                  </div>
-                  <div>
-                    <label for="subject_name"><strong>Subject Name</strong></label>
-                    <input type="text" id="subject_name" name="subject_name" placeholder="Computer Science" />
-                  </div>
-                  <div>
-                    <label for="course_code"><strong>Course Code</strong></label>
-                    <input type="text" id="course_code" name="course_code" placeholder="201" />
-                  </div>
-                  <div>
-                    <label for="course_name"><strong>Course Name</strong></label>
-                    <input type="text" id="course_name" name="course_name" placeholder="Computer Science I" />
+                  <div class="account-search-wrapper">
+                    <label for="course_search_query"><strong>Search Course</strong></label>
+                    <div class="account-search-row">
+                      <input type="text" id="course_search_query" name="course_search_query" placeholder="Search by subject, code, or name" autocomplete="off" />
+                      <button type="button" class="button button-secondary" id="course-search-submit">Search</button>
+                    </div>
+                    <div id="course_search_results" class="account-search-results" hidden>
+                      <p class="account-search-status" id="course-search-status"></p>
+                      <ul class="account-search-list" id="course-search-list"></ul>
+                    </div>
+                    <input type="hidden" id="course_lookup_results" name="course_lookup_results" />
                   </div>
                 </div>
               </details>
@@ -292,7 +243,6 @@ foreach ($eventTypes as $eventType) {
               <table class="umbc-table admin-table" id="schedule-table">
                 <thead>
                   <tr>
-                    <th>Schedule ID</th>
                     <th>Tutor</th>
                     <th>Course</th>
                     <th>Day</th>
@@ -304,7 +254,7 @@ foreach ($eventTypes as $eventType) {
                 <tbody>
                   <?php foreach ($mSchedule as $row) : ?>
                     <?php $schedule_user = $users_by_id[$row['user_id']] ?? null; ?>
-                    <?php $schedule_course = $courses_by_id[$row['course_id']] ?? null; ?>
+                    <?php $schedule_course = $mCourses[$row['course_id']] ?? null; ?>
                     <tr
                       data-schedule-id="<?php echo esc_attr($row['schedule_id']); ?>"
                       data-user-id="<?php echo esc_attr($row['user_id']); ?>"
@@ -313,7 +263,6 @@ foreach ($eventTypes as $eventType) {
                       data-start-time="<?php echo esc_attr($row['start_time']); ?>"
                       data-end-time="<?php echo esc_attr($row['end_time']); ?>"
                     >
-                      <td><?php echo esc_html($row['schedule_id']); ?></td>
                       <td><?php echo esc_html($schedule_user ? tutoring_admin_user_label($schedule_user) : $row['user_id']); ?></td>
                       <td>
                         <?php
@@ -324,7 +273,7 @@ foreach ($eventTypes as $eventType) {
                         );
                         ?>
                       </td>
-                      <td><?php echo esc_html(tutoring_admin_day_label($row['day_of_week'])); ?></td>
+                      <td><?php echo esc_html(tutoring_day_label($row['day_of_week'])); ?></td>
                       <td><?php echo esc_html(tutoring_admin_time_label($row['start_time'])); ?></td>
                       <td><?php echo esc_html(tutoring_admin_time_label($row['end_time'])); ?></td>
                       <td>
@@ -346,41 +295,49 @@ foreach ($eventTypes as $eventType) {
               <input type="hidden" id="account_user_id" name="user_id" />
 
               <div class="admin-grid">
-                <div>
-                  <label for="account_lookup_results"><strong>Select UMBC Account</strong></label>
-                  <select id="account_lookup_results" name="account_lookup_results">
-                    <option value="">Select an account</option>
-                  </select>
+                <div class="account-search-wrapper">
+                  <label for="account_search_query"><strong>Search UMBC Account</strong></label>
+                  <div class="account-search-row">
+                    <input type="text" id="account_search_query" name="account_search_query" placeholder="Search by name, ID, or email" autocomplete="off" />
+                    <button type="button" class="button button-secondary" id="account-search-submit">Search</button>
+                  </div>
+                  <div id="account_search_results" class="account-search-results" hidden>
+                    <p class="account-search-status" id="account-search-status"></p>
+                    <ul class="account-search-list" id="account-search-list"></ul>
+                  </div>
+                  <input type="hidden" id="account_lookup_results" name="account_lookup_results" />
                 </div>
               </div>
 
               <div class="admin-grid">
                 <div>
                   <label for="user_login"><strong>UMBC ID</strong></label>
-                  <input type="text" id="user_login" name="user_login" placeholder="AB12345" />
+                  <input type="text" id="user_login" name="user_login" placeholder="AB12345" readonly />
                 </div>
 
                 <div>
                   <label for="user_email"><strong>Email</strong></label>
-                  <input type="email" id="user_email" name="user_email" placeholder="student@umbc.edu" />
+                  <input type="email" id="user_email" name="user_email" placeholder="student@umbc.edu" readonly />
                 </div>
 
                 <div>
                   <label for="first_name"><strong>First Name</strong></label>
-                  <input type="text" id="first_name" name="first_name" />
+                  <input type="text" id="first_name" name="first_name" readonly />
                 </div>
 
                 <div>
                   <label for="last_name"><strong>Last Name</strong></label>
-                  <input type="text" id="last_name" name="last_name" />
+                  <input type="text" id="last_name" name="last_name" readonly />
                 </div>
 
-                <div class="admin-role-box">
-                  <strong>Roles</strong>
-                  <label><input type="checkbox" name="roles[]" value="tutor" /> Tutor</label>
-                  <label><input type="checkbox" name="roles[]" value="asc_staff" /> Staff</label>
-                  <label><input type="checkbox" name="roles[]" value="asc_admin" /> Admin</label>
-                </div>
+                <fieldset class="admin-role-box">
+                  <legend><strong>Roles</strong></legend>
+                  <div class="admin-role-options">
+                    <label><input type="checkbox" name="roles[]" value="tutor" /> Tutor</label>
+                    <label><input type="checkbox" name="roles[]" value="asc_staff" /> Staff</label>
+                    <label><input type="checkbox" name="roles[]" value="asc_admin" /> Admin</label>
+                  </div>
+                </fieldset>
               </div>
 
               <div class="admin-actions">
@@ -393,7 +350,6 @@ foreach ($eventTypes as $eventType) {
               <table class="umbc-table admin-table" id="accounts-table">
                 <thead>
                   <tr>
-                    <th>User ID</th>
                     <th>UMBC ID</th>
                     <th>Name</th>
                     <th>Email</th>
@@ -409,13 +365,12 @@ foreach ($eventTypes as $eventType) {
                       data-user-email="<?php echo esc_attr($user['user_email']); ?>"
                       data-first-name="<?php echo esc_attr($user['first_name']); ?>"
                       data-last-name="<?php echo esc_attr($user['last_name']); ?>"
-                      data-roles="<?php echo esc_attr($user['roles'] ?? ''); ?>"
+                      data-roles="<?php echo esc_attr(implode(',', $user['roles'] ?? [])); ?>"
                     >
-                      <td><?php echo esc_html($user['user_id']); ?></td>
                       <td><?php echo esc_html($user['user_login']); ?></td>
                       <td><?php echo esc_html(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?></td>
                       <td><?php echo esc_html($user['user_email']); ?></td>
-                      <td><?php echo esc_html($user['roles'] ?? '—'); ?></td>
+                      <td><?php echo esc_html(display_roles($user['roles'])); ?></td>
                       <td>
                         <button type="button" class="button button-secondary admin-edit-account">Edit</button>
                         <button type="button" class="button button-secondary admin-delete-account">Delete</button>
@@ -434,7 +389,7 @@ foreach ($eventTypes as $eventType) {
   </div>
 </main>
 
-<?php if ($can_staff || $can_admin) : ?>
+<?php if ($is_staff || $is_admin) : ?>
   
 <style>
 .tutoring-admin-tabs,
@@ -519,6 +474,113 @@ foreach ($eventTypes as $eventType) {
   color: #666;
   cursor: not-allowed;
 }
+
+.admin-role-box {
+  border: 0;
+  padding: 0;
+}
+.admin-role-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.admin-role-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.admin-role-box input[type="checkbox"] {
+  width: auto;
+}
+
+.account-search-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.account-search-row input {
+  flex: 1;
+  margin-top: 0;
+}
+
+.account-search-results {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fafafa;
+  margin-top: 4px;
+  padding: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.account-search-status {
+  margin: 0 0 6px;
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.account-search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account-search-list .account-search-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.account-search-item:hover {
+  background: #f0f4ff;
+  border-color: #aac;
+}
+
+.account-search-item.selected {
+  background: #e8f0fe;
+  border-color: #3b82f6;
+}
+
+.account-search-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.account-search-item-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.account-search-item-meta {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+input[readonly] {
+    cursor: not-allowed;
+    outline: none;
+}
+
 </style>
 
 <?php endif; ?>

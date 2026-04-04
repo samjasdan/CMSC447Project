@@ -694,7 +694,7 @@ $config = [
      */
     'session.rememberme.enable' => false,
     'session.rememberme.checked' => false,
-    'session.rememberme.lifetime' => (14 * 86400),
+    'session.rememberme.lifetime' => (0),
 
     /*
      * Custom function for session checking called on session init and loading.

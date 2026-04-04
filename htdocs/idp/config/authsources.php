@@ -27,7 +27,7 @@ $config = [
         'saml:SP',
 
         // The entity ID of this SP.
-        'entityID' => 'https://localhost/drop-in-tutoring/',
+        'entityID' => 'urn:localhost',
 
         // The entity ID of the IdP this SP should contact.
         // Can be NULL/unset, in which case the user will be shown a list of available IdPs.

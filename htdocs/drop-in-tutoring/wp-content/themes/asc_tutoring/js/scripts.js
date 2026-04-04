@@ -460,10 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
     'schedule_day_of_week',
     'schedule_start_time',
     'schedule_end_time',
-    'course_subject',
-    'subject_name',
-    'course_code',
-    'course_name'
   ];
 
   const accountLookupResults = document.getElementById('account_lookup_results');
@@ -484,49 +480,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  const setAccountFieldsEditable = (editable) => {
-    accountFieldIds.forEach((id) => {
-      const field = document.getElementById(id);
-      if (!field) return;
-      field.readOnly = !editable;
-      field.disabled = false;
-      field.classList.toggle('account-field-locked', !editable);
-    });
-  };
-
   const setRolesEditable = (editable) => {
     accountForm.querySelectorAll('input[name="roles[]"]').forEach((cb) => {
       cb.disabled = !editable;
+      cb.style.cursor = editable ? '' : 'not-allowed';
     });
+  };
+
+  const setAccountSearchEditable = (editable) => {
+    const searchInput = document.getElementById('account_search_query');
+    const searchBtn = document.getElementById('account-search-submit');
+    if (searchInput) searchInput.disabled = !editable;
+    if (searchBtn) searchBtn.disabled = !editable;
   };
 
   const setAccountFormMode = (mode) => {
     const isEditMode = mode === 'edit';
 
-    if (accountLookupResults) {
-      accountLookupResults.disabled = isEditMode;
-    }
+    // Disable the search UI while editing an existing record
+    setAccountSearchEditable(!isEditMode);
 
     if (isEditMode) {
-      setAccountFieldsEditable(true);
       setRolesEditable(true);
       return;
     }
 
     const hasSelectedAccount = !!(accountLookupResults && accountLookupResults.value);
 
-    setAccountFieldsEditable(false);
     setRolesEditable(hasSelectedAccount);
 
     if (!hasSelectedAccount) {
       clearAccountTextFields();
     }
-  };
-
-  const resetUmbcLookupDropdown = (message = 'Select an account') => {
-    if (!accountLookupResults) return;
-    accountLookupResults.innerHTML = `<option value="">${message}</option>`;
-    accountLookupResults.disabled = false;
   };
 
 const fillScheduleFormFromCourse = (course) => {
@@ -553,10 +538,6 @@ const setScheduleCourseFieldsEditable = (editable) => {
 const setScheduleFormMode = (mode) => {
   const isEditMode = mode === 'edit';
 
-  if (scheduleCourseLookup) {
-    scheduleCourseLookup.disabled = isEditMode;
-  }
-
   if (isEditMode) {
     setScheduleCourseFieldsEditable(true);
     return;
@@ -577,77 +558,181 @@ const setScheduleFormMode = (mode) => {
   }
 };
 
-const resetScheduleCourseDropdown = (message = 'Select a course') => {
-  if (!scheduleCourseLookup) return;
-  scheduleCourseLookup.innerHTML = `<option value="">${message}</option>`;
-  scheduleCourseLookup.disabled = false;
-};
+const searchUmbcCourses = async (query) => {
+  const resultsBox = document.getElementById('course_search_results');
+  const statusEl = document.getElementById('course-search-status');
+  const listEl = document.getElementById('course-search-list');
 
-const loadUmbcCoursesDropdown = async () => {
-  if (!scheduleCourseLookup) return;
+  if (!resultsBox) return;
+
+  resultsBox.hidden = false;
+  statusEl.textContent = 'Searching…';
+  listEl.innerHTML = '';
 
   try {
-    resetScheduleCourseDropdown('Loading courses...');
-
-    const data = await requestJson('/umbc_db/courses', 'GET');
+    const data = await requestJson(`/umbc_db/courses?search_str=${encodeURIComponent(query)}`, 'GET');
     const courses = data.umbc_courses || [];
 
-    scheduleCourseLookup.innerHTML = '<option value="">Select a course</option>';
+    if (courses.length === 0) {
+      statusEl.textContent = 'No courses found.';
+      return;
+    }
+
+    statusEl.textContent = `${courses.length} result${courses.length !== 1 ? 's' : ''} found — click a result to select it.`;
 
     courses.forEach((course) => {
-      const option = document.createElement('option');
-      option.value = JSON.stringify(course);
-      option.textContent = `${course.course_subject} ${course.course_code}`;
-      scheduleCourseLookup.appendChild(option);
+      const li = document.createElement('li');
+      li.className = 'account-search-item';
+      li.dataset.course = JSON.stringify(course);
+      li.innerHTML = `
+        <div class="account-search-item-info">
+          <span class="account-search-item-name">${course.course_subject} ${course.course_code} — ${course.course_name}</span>
+          <span class="account-search-item-meta">${course.subject_name}</span>
+        </div>
+        <button type="button" class="button button-secondary" style="flex-shrink:0;">Select</button>
+      `;
+
+      const selectFn = () => {
+        listEl.querySelectorAll('.account-search-item').forEach(el => el.classList.remove('selected'));
+        li.classList.add('selected');
+
+        const courseLookupResults = document.getElementById('course_lookup_results');
+        if (courseLookupResults) courseLookupResults.value = JSON.stringify(course);
+
+        if (scheduleCourseLookup) {
+            const existing = scheduleCourseLookup.querySelector('option[data-new-course]');
+            if (existing) existing.remove();
+
+            const opt = document.createElement('option');
+            opt.value = 'new';
+            opt.textContent = 'New Course Selected';
+            opt.dataset.newCourse = 'true';
+            opt.selected = true;
+            scheduleCourseLookup.prepend(opt);
+        }
+        fillScheduleFormFromCourse(course);
+        setScheduleFormMode('add');
+        showMessage(`Selected course: ${course.course_subject} ${course.course_code} — ${course.course_name}`, 'success');
+      };
+
+      li.addEventListener('click', selectFn);
+      li.querySelector('button').addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectFn();
+      });
+
+      listEl.appendChild(li);
     });
   } catch (err) {
-    resetScheduleCourseDropdown('Failed to load courses');
+    statusEl.textContent = 'Search failed.';
     showMessage(err.message, 'error');
   }
 };
 
-  const loadUmbcAccountsDropdown = async () => {
-    if (!accountLookupResults) return;
+  const searchUmbcAccounts = async (query) => {
+    const resultsBox = document.getElementById('account_search_results');
+    const statusEl = document.getElementById('account-search-status');
+    const listEl = document.getElementById('account-search-list');
+
+    if (!resultsBox) return;
+
+    resultsBox.hidden = false;
+    statusEl.textContent = 'Searching…';
+    listEl.innerHTML = '';
 
     try {
-      resetUmbcLookupDropdown('Loading accounts...');
-
-      const data = await requestJson('/umbc_db/accounts', 'GET');
+      const data = await requestJson(`/umbc_db/accounts?search_str=${encodeURIComponent(query)}`, 'GET');
       const accounts = data.umbc_accounts || [];
 
-      accountLookupResults.innerHTML = '<option value="">Select an account</option>';
+      if (accounts.length === 0) {
+        statusEl.textContent = 'No accounts found.';
+        return;
+      }
+
+      statusEl.textContent = `${accounts.length} result${accounts.length !== 1 ? 's' : ''} found — click a result to select it.`;
 
       accounts.forEach((account) => {
-        const option = document.createElement('option');
-        option.value = JSON.stringify(account);
-        option.textContent = `${account.first_name} ${account.last_name} ${account.umbc_id}`;
-        accountLookupResults.appendChild(option);
+        const li = document.createElement('li');
+        li.className = 'account-search-item';
+        li.dataset.account = JSON.stringify(account);
+        li.innerHTML = `
+          <div class="account-search-item-info">
+            <span class="account-search-item-name">${account.first_name} ${account.last_name}</span>
+            <span class="account-search-item-meta">${account.umbc_id} &bull; ${account.umbc_email}</span>
+          </div>
+          <button type="button" class="button button-secondary" style="flex-shrink:0;">Select</button>
+        `;
+
+        const selectFn = () => {
+          // Deselect others
+          listEl.querySelectorAll('.account-search-item').forEach(el => el.classList.remove('selected'));
+          li.classList.add('selected');
+
+          // Store value in hidden input
+          if (accountLookupResults) {
+            accountLookupResults.value = JSON.stringify(account);
+          }
+
+          fillAccountFormFromUmbc(account);
+          setAccountFormMode('add');
+          showMessage(`Selected account: ${account.first_name} ${account.last_name} (${account.umbc_id})`, 'success');
+        };
+
+        li.addEventListener('click', selectFn);
+        li.querySelector('button').addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectFn();
+        });
+
+        listEl.appendChild(li);
       });
     } catch (err) {
-      resetUmbcLookupDropdown('Failed to load accounts');
+      statusEl.textContent = 'Search failed.';
       showMessage(err.message, 'error');
     }
   };
 
   (async () => {
-    if (accountForm && accountLookupResults) {
-      await loadUmbcAccountsDropdown();
+    if (accountForm) {
       setAccountFormMode('add');
     }
 
     if (scheduleForm && scheduleCourseLookup) {
-      await loadUmbcCoursesDropdown();
       setScheduleFormMode('add');
     }
   })();
+
+  scheduleCourseLookup?.addEventListener('change', () => {
+    if (!scheduleCourseLookup.value) {
+      clearScheduleCourseFields();
+      setScheduleFormMode('add');
+      return;
+    }
+
+    try {
+      const course = JSON.parse(scheduleCourseLookup.value);
+      fillScheduleFormFromCourse(course);
+      setScheduleFormMode('add');
+    } catch (err) {
+      showMessage('Failed to load selected course.', 'error');
+    }
+  });
 
 
   document.getElementById('reset-schedule-form')?.addEventListener('click', () => {
     scheduleForm.reset();
     document.getElementById('schedule_id').value = '';
-    if (scheduleCourseLookup) {
-      scheduleCourseLookup.value = '';
-    }
+    if (scheduleCourseLookup) scheduleCourseLookup.value = '';
+    const newCourseOpt = scheduleCourseLookup?.querySelector('option[data-new-course]');
+    if (newCourseOpt) newCourseOpt.remove();
+    const courseQuery = document.getElementById('course_search_query');
+    if (courseQuery) courseQuery.value = '';
+    const courseResults = document.getElementById('course_search_results');
+    if (courseResults) courseResults.hidden = true;
+    const courseList = document.getElementById('course-search-list');
+    if (courseList) courseList.innerHTML = '';
+    const courseLookupResults = document.getElementById('course_lookup_results');
+    if (courseLookupResults) courseLookupResults.value = '';
     clearScheduleCourseFields();
     setScheduleFormMode('add');
   });
@@ -658,23 +743,56 @@ const loadUmbcCoursesDropdown = async () => {
     if (accountLookupResults) {
       accountLookupResults.value = '';
     }
+    // Clear search UI
+    const searchQuery = document.getElementById('account_search_query');
+    if (searchQuery) searchQuery.value = '';
+    const searchResults = document.getElementById('account_search_results');
+    if (searchResults) searchResults.hidden = true;
+    const searchList = document.getElementById('account-search-list');
+    if (searchList) searchList.innerHTML = '';
     clearAccountTextFields();
     setAccountFormMode('add');
   });
 
-accountLookupResults?.addEventListener('change', () => {
-  if (!accountLookupResults.value) {
-    clearAccountTextFields();
-    setAccountFormMode('add');
+document.getElementById('account-search-submit')?.addEventListener('click', async () => {
+  const query = document.getElementById('account_search_query').value.trim();
+  if (!query) {
+    showMessage('Please enter a search term.', 'error');
     return;
   }
+  // Clear previously selected account when a new search runs
+  if (accountLookupResults) {
+    accountLookupResults.value = '';
+  }
+  clearAccountTextFields();
+  setAccountFormMode('add');
+  await searchUmbcAccounts(query);
+});
 
-  try {
-    const account = JSON.parse(accountLookupResults.value);
-    fillAccountFormFromUmbc(account);
-    setAccountFormMode('add');
-  } catch (err) {
-    showMessage('Failed to load selected UMBC account.', 'error');
+document.getElementById('account_search_query')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('account-search-submit')?.click();
+  }
+});
+
+document.getElementById('course-search-submit')?.addEventListener('click', async () => {
+  const query = document.getElementById('course_search_query').value.trim();
+  if (!query) {
+    showMessage('Please enter a search term.', 'error');
+    return;
+  }
+  const courseLookupResults = document.getElementById('course_lookup_results');
+  if (courseLookupResults) courseLookupResults.value = '';
+  clearScheduleCourseFields();
+  setScheduleFormMode('add');
+  await searchUmbcCourses(query);
+});
+
+document.getElementById('course_search_query')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('course-search-submit')?.click();
   }
 });
 
@@ -733,10 +851,6 @@ document.querySelectorAll('.admin-edit-schedule').forEach(btn => {
       day_of_week: document.getElementById('schedule_day_of_week').value,
       start_time: document.getElementById('schedule_start_time').value,
       end_time: document.getElementById('schedule_end_time').value,
-      course_subject: document.getElementById('course_subject').value,
-      subject_name: document.getElementById('subject_name').value,
-      course_code: document.getElementById('course_code').value,
-      course_name: document.getElementById('course_name').value
     };
 
     try {
@@ -762,6 +876,7 @@ document.querySelectorAll('.admin-edit-schedule').forEach(btn => {
       document.getElementById('start_day').value = row.dataset.startDay;
       document.getElementById('final_day').value = row.dataset.finalDay;
       document.getElementById('duration').value = row.dataset.duration;
+      toggleFields();
       showMessage(`Loaded event ${row.dataset.eventId} into the form.`, 'success');
     });
   });
@@ -782,21 +897,7 @@ document.querySelectorAll('.admin-edit-schedule').forEach(btn => {
     });
   });
 
-  scheduleCourseLookup?.addEventListener('change', () => {
-  if (!scheduleCourseLookup.value) {
-    clearScheduleCourseFields();
-    setScheduleFormMode('add');
-    return;
-  }
 
-  try {
-    const course = JSON.parse(scheduleCourseLookup.value);
-    fillScheduleFormFromCourse(course);
-    setScheduleFormMode('add');
-  } catch (err) {
-    showMessage('Failed to load selected course.', 'error');
-  }
-});
 
   eventForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -819,9 +920,12 @@ document.querySelectorAll('.admin-edit-schedule').forEach(btn => {
         showMessage(`Created event ${data.event_id}. Reload to refresh the table.`);
       }
       eventForm.reset();
+      document.getElementById("event_type").selectedIndex = 0;
+      toggleFields();
     } catch (err) {
       showMessage(err.message, 'error');
     }
+    
   });
 
   document.querySelectorAll('.admin-edit-account').forEach(btn => {
@@ -846,6 +950,11 @@ document.querySelectorAll('.admin-edit-schedule').forEach(btn => {
       if (accountLookupResults) {
         accountLookupResults.value = '';
       }
+
+      const searchResults = document.getElementById('account_search_results');
+      if (searchResults) searchResults.hidden = true;
+      const searchQuery = document.getElementById('account_search_query');
+      if (searchQuery) searchQuery.value = '';
 
       setAccountFormMode('edit');
 
@@ -913,6 +1022,11 @@ document.querySelectorAll('.admin-edit-schedule').forEach(btn => {
       if (accountLookupResults) {
         accountLookupResults.value = '';
       }
+      // Clear search UI after save
+      const searchQueryEl = document.getElementById('account_search_query');
+      if (searchQueryEl) searchQueryEl.value = '';
+      const searchResultsEl = document.getElementById('account_search_results');
+      if (searchResultsEl) searchResultsEl.hidden = true;
       setAccountFormMode('add');
     } catch (err) {
       showMessage(err.message, 'error');
@@ -966,3 +1080,37 @@ document.querySelectorAll('.admin-edit-schedule').forEach(btn => {
     }
   });
 });
+
+function toggleFields() {
+  const eventType = document.getElementById("event_type");
+  const dateRangeFields = document.getElementById("date-range-fields");
+  const durationField = document.getElementById("duration-field");
+  const today = new Date().toISOString().split('T')[0];
+  const selectedText = eventType.options[eventType.selectedIndex].text.toLowerCase();
+
+  dateRangeFields.style.display = "none";
+  durationField.style.display = "none";
+
+  dateRangeFields.querySelectorAll("input").forEach(i => {i.removeAttribute("required"); i.value = today;});
+  durationField.querySelectorAll("input").forEach(i => i.removeAttribute("required"));
+
+  if (selectedText.includes("absent")) {
+    dateRangeFields.style.display = "block";
+    dateRangeFields.querySelectorAll("input").forEach(i => {i.setAttribute("required", ""); i.value = "";});
+  } 
+  else if (selectedText.includes("leaving early")) {
+    durationField.style.display = "block";
+    durationField.querySelectorAll("input").forEach(i => i.setAttribute("required", ""));
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const eventType = document.getElementById("event_type");
+
+  eventType.addEventListener("change", toggleFields);
+
+  // run once on load
+  toggleFields();
+});
+
+
