@@ -184,11 +184,6 @@ foreach ($eventTypes as $eventType) {
                   <label for="schedule_course_lookup"><strong>Select Course</strong></label>
                   <select id="schedule_course_lookup" name="schedule_course_lookup">
                     <option value="">Select a course</option>
-                    <?php foreach ($mCourses as $course) : ?>
-                      <option value="<?php echo esc_attr(json_encode($course)); ?>">
-                        <?php echo esc_html($course['course_subject'] . ' ' . $course['course_code']); ?>
-                      </option>
-                    <?php endforeach; ?>
                   </select>
                 </div>
 
@@ -221,17 +216,21 @@ foreach ($eventTypes as $eventType) {
               <details class="admin-details">
                 <summary><strong>New course / subject fields</strong> (only needed when the course ID does not already exist)</summary>
                 <div class="admin-grid">
-                  <div class="account-search-wrapper">
-                    <label for="course_search_query"><strong>Search Course</strong></label>
-                    <div class="account-search-row">
-                      <input type="text" id="course_search_query" name="course_search_query" placeholder="Search by subject, code, or name" autocomplete="off" />
-                      <button type="button" class="button button-secondary" id="course-search-submit">Search</button>
-                    </div>
-                    <div id="course_search_results" class="account-search-results" hidden>
-                      <p class="account-search-status" id="course-search-status"></p>
-                      <ul class="account-search-list" id="course-search-list"></ul>
-                    </div>
-                    <input type="hidden" id="course_lookup_results" name="course_lookup_results" />
+                  <div>
+                    <label for="course_subject"><strong>Subject Code</strong></label>
+                    <input type="text" id="course_subject" name="course_subject" placeholder="CMSC" />
+                  </div>
+                  <div>
+                    <label for="subject_name"><strong>Subject Name</strong></label>
+                    <input type="text" id="subject_name" name="subject_name" placeholder="Computer Science" />
+                  </div>
+                  <div>
+                    <label for="course_code"><strong>Course Code</strong></label>
+                    <input type="text" id="course_code" name="course_code" placeholder="201" />
+                  </div>
+                  <div>
+                    <label for="course_name"><strong>Course Name</strong></label>
+                    <input type="text" id="course_name" name="course_name" placeholder="Computer Science I" />
                   </div>
                 </div>
               </details>
