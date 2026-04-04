@@ -30,9 +30,6 @@ foreach ($eventTypes as $eventType) {
 
   <div class="main-content">
     <article id="post-tutoring-admin" class="page type-page status-publish hentry">
-      <a class="button button-secondary admin-nav-button" href="<?php echo esc_url(get_permalink(get_page_by_path('drop-in-tutoring'))); ?>">
-        Drop-In Tutoring Page
-      </a>
 
       <header class="entry-header">
         <h1 class="entry-title">Tutoring Admin</h1>

@@ -32,6 +32,28 @@ if (!function_exists('wp_delete_user')) {
         ]);
     });
 
+    /*
+    add_action('init', function () {
+
+        // Only run on wp-login.php
+        if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') === false) {
+            return;
+        }
+
+        // If this is NOT a normal login form submission
+        // and user is not logged in → likely SAML failure
+        if (!is_user_logged_in() && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+
+            // Optional: avoid infinite loop
+            if (isset($_GET['redirected_from_saml'])) {
+                return;
+            }
+
+            wp_redirect(home_url());
+            exit;
+        }
+    });
+    */
     function db_connect_root($dbName) {
         $host = "localhost";
         $username = "root";

@@ -1,0 +1,231 @@
+<?php
+/*
+Template Name: Login Page
+*/
+?>
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=100" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="noindex,nofollow,noarchive" name="robots">
+
+    <title>Log In &middot; myUMBC</title>
+    <meta name="description" content="Log in to myUMBC, the campus portal for the University of Maryland, Baltimore County.">
+
+    <link href="https://assets1-my.umbc.edu/images/favicon.ico?1533300947" rel="icon" type="image/x-icon">
+
+    <link
+      href="https://assets3-my.umbc.edu/stylesheets/dialog.css?1533301144"
+      media="screen"
+      rel="stylesheet"
+      type="text/css"
+    >
+
+    <style>
+      .sr-only {
+        border: 0;
+        clip: rect(0, 0, 0, 0);
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        padding: 0;
+        position: absolute;
+        white-space: nowrap;
+        width: 1px;
+      }
+      #myumbc-logo {
+        background-image: url("https://my3.my.umbc.edu/images/sprites.png?1406123226");
+        background-position: 0 -192px;
+        background-repeat: no-repeat;
+        height: 48px;
+        width: 217px;
+        margin: 12px 0 16px 20px;
+      }
+    </style>
+
+    <style>
+      .login-field {
+        margin: 8px 0;
+      }
+      .login-field input,
+      login-field label {
+        display: block;
+      }
+      .login-field input,
+      .login-field input[type=password] {
+        box-sizing: border-box;
+        width: 96%;
+        font-size: 1.2em;
+        line-height: 1.2em;
+        padding: 8px 12px;
+      }
+      .login-field label {
+        font-weight: bold;
+      }
+
+      #facebook a:hover,
+      #google a:hover {
+        opacity: 0.9;
+      }
+
+      #dialog-container {
+        background-color: #fff;
+      }
+      #dialog-container h2 {
+        font-size: 24px;
+        padding: 0;
+        margin: 4px 0;
+      }
+      #dialog-container #login-dialog {
+        padding: 8px 20px 20px;
+        border-radius: 0;
+        margin: 0;
+      }
+      #login-forms {
+        width 100%;
+        overflow: auto;
+      }
+      .login-form-selection {
+        background-color: #fff;
+        padding: 12px;
+      }
+      #login-form-other {
+        margin-top: 16px;
+        border-top: 1px solid #999;
+        padding-top: 16px;
+      }
+      #footer-text {
+        color: #666;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #eee;
+        font-size: 11px;
+      }
+      input[type="password"] {
+        background-color: #f6f6f6;
+        border: 1px solid #999999;
+        border-radius: 4px;
+        color: #333333;
+        font-family: Arial,Helvetica,sans-serif;
+        font-size: 13px;
+        line-height: 16px;
+        padding: 4px;
+      }
+      #submit {
+        font-weight: normal;
+        background-color: #3d7a1c;
+        color: #fff;
+      }
+      p.service {
+        margin: 4px auto;
+      }
+
+      p.service > a, p.service > span {
+        display: flex;
+        margin: 0 auto;
+        width: 230px;
+        border-radius: 4px;
+        line-height: 24px;
+        /* text-align: center; */
+        background-color: #fff;
+        border: 1px solid #ddd;
+        color: #000;
+        text-decoration: none;
+        font-size: 16px;
+        /* vertical-align: middle; */
+        padding: 8px 8px;
+        font-weight: bold;
+        height: 24px;
+        overflow: hidden;
+      }
+
+      p.service .label {
+        display: block;
+        line-height: 24px;
+        vertical-align: middle;
+      }
+
+      .service img {
+        display: block;
+        vertical-align: middle;
+        height: 24px;
+        width: 24px;
+        margin: 0 12px 0 0;
+        overflow: hidden;
+        border-radius: 0;
+      }
+
+      #login-umbc > a {
+        background-color: #fdb515;
+        border-color: #fdb515;
+      }
+
+      #dialog-container {
+        width: 320px;
+      }
+      .login-form-selection {
+        padding: 0;
+      }
+    </style>
+
+    <style>
+      #login-myumbc:hover {
+        background-color: #ffbb1b;
+      }
+
+      html { height: 100%; }
+
+      body {
+        background-color: #f5ca5c;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+
+      #dialog-container {
+        margin: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main id="dialog-container">
+      <h1 class="sr-only">Log In to myUMBC</h1>
+      <div id="myumbc-logo" role="img" aria-label="myUMBC logo"></div>
+
+      <div class="section html-content" id="login-dialog">
+        <div id="login-forms">
+
+          <div class="login-form-selection" id="login-form-myumbc">
+            <h2>myUMBC Account</h2>
+
+            <p>
+              UMBC Students, Faculty, and Staff
+            </p>
+
+            <p class="service" id="login-umbc"><a href="<?php echo esc_url(wp_login_url() . '?action=wp-saml-auth'); ?>"><img alt="Log In with UMBC" height="24" width="24" src="https://d3uyg54qwz4w8h.cloudfront.net/assets/my4/login-umbc-0a7c460c.png" /><span class="label">Log In with UMBC</span></a></p>
+          </div>
+
+          <div class="login-form-selection" id="login-form-other">
+            <h2>Guest Access</h2>
+
+            <p>Special guests that have been granted access</p>
+
+            <p class="service" id="login-google"><a href="/login/google?url=https%3A%2F%2Fmy.umbc.edu%2F"><img alt="Log In with Google" height="24" width="24" src="https://d3uyg54qwz4w8h.cloudfront.net/assets/my4/login-google-ee49770f.png" /> <span class="label">Log In with Google</span></a></p>
+
+            <p class="service" id="login-microsoft"><a href="/login/microsoft?url=https%3A%2F%2Fmy.umbc.edu%2F"><img alt="Log In with Microsoft" height="24" width="24" src="https://d3uyg54qwz4w8h.cloudfront.net/assets/my4/login-microsoft-1f6a4cfb.png" /> <span class="label">Log In with Microsoft</span></a></p>
+
+            <p class="service" id="login-amazon"><a href="/login/amazon?url=https%3A%2F%2Fmy.umbc.edu%2F"><img alt="Log In with Amazon" height="24" width="24" src="https://d3uyg54qwz4w8h.cloudfront.net/assets/my4/login-amazon-c3c04e73.png" /> <span class="label">Log In with Amazon</span></a></p>
+          </div>
+        </div>
+
+        <div id="footer-text">Usage of UMBC computing resources is governed by the <a href="http://www.umbc.edu/policies/pdfs/x-1.00.01%20responsible%20computing%20policy.pdf">UMBC Policy for Responsible Computing</a>.</div>
+      </div>
+
+    </main>
+  </body>
+</html>

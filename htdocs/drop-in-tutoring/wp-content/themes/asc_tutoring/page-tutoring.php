@@ -13,10 +13,6 @@ get_header();
 
   <div class="main-content">
     <article id="post-dropin" class="page type-page status-publish hentry">
-      <a class="button button-primary admin-nav-button" href="<?php echo esc_url(get_permalink(get_page_by_path('tutoring-admin'))); ?>">
-        Admin Login
-      </a>
-
       <header class="entry-header">
         <h1 class="entry-title">Drop-In Tutoring</h1>
       </header>

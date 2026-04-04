@@ -11,10 +11,23 @@
 <li class="menu-item menu-item-type-post_type menu-item-object-page current-menu-ancestor current-menu-parent current_page_parent current_page_ancestor menu-item-has-children"><a href="https://academicsuccess.umbc.edu/tutoring/" target="_self">Tutoring</a>
 <ul class="sub-menu">
 <li class="menu-item menu-item-type-post_type menu-item-object-page"><a href="https://academicsuccess.umbc.edu/appointment-tutoring/" target="_self">Appointment Tutoring</a></li>
-<li class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-527 current_page_item"><a href="https://academicsuccess.umbc.edu/drop-in-tutoring/" target="_self">Drop-In Tutoring</a></li>
-<li class="menu-item menu-item-type-post_type menu-item-object-page"><a href="https://academicsuccess.umbc.edu/writing-center/" target="_self">Writing Center</a></li>
-<li class="menu-item menu-item-type-post_type menu-item-object-page"><a href="/tutoring-admin/">Tutoring Admin</a></li></ul>
+<?php
+$is_current = is_page('drop-in-tutoring');
+$current_classes = $is_current ? ' current-menu-item page_item current_page_item' : '';
+?>
+<li class="menu-item menu-item-type-post_type menu-item-object-page page-item-527<?php echo $current_classes; ?>">
+    <a href="<?php echo esc_url(home_url('/drop-in-tutoring/')); ?>" target="_self">Drop-In Tutoring</a>
 </li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page"><a href="https://academicsuccess.umbc.edu/writing-center/" target="_self">Writing Center</a></li>
+<?php 
+    $is_current = is_page('drop-in-tutoring/tutoring-admin');
+    $current_classes = $is_current ? ' current-menu-item page_item current_page_item' : '';
+    if (current_user_can('staff_control')) {
+        echo '<li class="menu-item menu-item-type-post_type menu-item-object-page ' . $current_classes . '"><a href="' . home_url('/tutoring-admin') . '">Tutoring Admin</a></li>';
+    }
+
+?>
+</ul></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children"><a href="https://academicsuccess.umbc.edu/si-pass/" target="_self">SI PASS</a>
 <ul class="sub-menu">
 <li class="menu-item menu-item-type-post_type menu-item-object-page"><a href="https://academicsuccess.umbc.edu/si-pass/si-pass-schedule/" target="_self">SI PASS Schedule</a></li>
