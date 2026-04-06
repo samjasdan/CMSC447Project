@@ -495,7 +495,7 @@ foreach ($eventTypes as $eventType) {
 
 .admin-role-box {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   flex-wrap: nowrap;
   gap: 8px;
   border: 0;
