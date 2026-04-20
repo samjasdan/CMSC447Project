@@ -36,23 +36,22 @@ foreach ($eventTypes as $eventType) {
       </header>
 
       <div class="entry-content">
-        <?php if (!$is_staff && !$is_admin) : ?>
+        <?php if (!$is_staff) : ?>
           <section class="admin-panel">
             <p>You must be logged in with an authorized staff or admin account to access tutoring controls.</p>
           </section>
         <?php else : ?>
 
           <nav class="tutoring-admin-tabs" aria-label="Admin sections">
-            <?php if ($is_staff || $is_admin) : ?>
-              <button type="button" class="button button-primary admin-tab active" data-tab="events">Tutor Events</button>
-            <?php endif; ?>
             <?php if ($is_admin) : ?>
+              <button type="button" class="button button-primary admin-tab active" data-tab="events">Tutor Events</button>            
               <button type="button" class="button button-primary admin-tab" data-tab="schedule">Schedule</button>
               <button type="button" class="button button-primary admin-tab" data-tab="accounts">Accounts</button>
+              <button type="button" class="button button-primary admin-tab" data-tab="logs">Logs</button>
             <?php endif; ?>
           </nav>
 
-          <?php if ($is_staff || $is_admin) : ?>
+          <?php if ($is_staff) : ?>
           <section class="admin-section active" id="admin-tab-events">
             <h2>Tutor Events</h2>
             <p>Create, update, and delete tutor events such as late arrivals, call-outs, early departures, and other shift events.</p>
@@ -123,8 +122,8 @@ foreach ($eventTypes as $eventType) {
                   <tr>
                     <th>Tutor</th>
                     <th>Type</th>
-                    <th>Start</th>
-                    <th>Final</th>
+                    <th>Starting Day</th>
+                    <th>Final Day</th>
                     <th>Duration</th>
                     <th>Actions</th>
                   </tr>
@@ -152,7 +151,7 @@ foreach ($eventTypes as $eventType) {
                       </td>
                       <td><?php echo esc_html($event['duration'] !== null ? $event['duration'] : '—'); ?></td>
                       <td>
-                        <button type="button" class="button button-secondary admin-edit-event">Edit</button>
+                        <button type="button" class="button button-primary admin-edit-event">Edit</button>
                         <button type="button" class="button button-secondary admin-delete-event">Delete</button>
                       </td>
                     </tr>
@@ -287,7 +286,7 @@ foreach ($eventTypes as $eventType) {
                     <label for="course_search_query"><strong>Search Course</strong></label>
                     <div class="account-search-row">
                       <input type="text" id="course_search_query" name="course_search_query" placeholder="Search by subject, code, or name" autocomplete="off" />
-                      <button type="button" class="button button-secondary" id="course-search-submit">Search</button>
+                      <button type="button" class="button button-primary" id="course-search-submit">Search</button>
                     </div>
                     <div id="course_search_results" class="account-search-results" hidden>
                       <p class="account-search-status" id="course-search-status"></p>
@@ -312,8 +311,8 @@ foreach ($eventTypes as $eventType) {
                     <th>Tutor</th>
                     <th>Course</th>
                     <th>Day</th>
-                    <th>Start</th>
-                    <th>End</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -343,7 +342,7 @@ foreach ($eventTypes as $eventType) {
                       <td><?php echo esc_html(tutoring_admin_time_label($row['start_time'])); ?></td>
                       <td><?php echo esc_html(tutoring_admin_time_label($row['end_time'])); ?></td>
                       <td>
-                        <button type="button" class="button button-secondary admin-edit-schedule">Edit</button>
+                        <button type="button" class="button button-primary admin-edit-schedule">Edit</button>
                         <button type="button" class="button button-secondary admin-delete-schedule">Delete</button>
                       </td>
                     </tr>
@@ -366,7 +365,7 @@ foreach ($eventTypes as $eventType) {
                   <label for="account_search_query"><strong>Search UMBC Account</strong></label>
                   <div class="account-search-row">
                     <input type="text" id="account_search_query" name="account_search_query" placeholder="Search by name, ID, or email" autocomplete="off" />
-                    <button type="button" class="button button-secondary" id="account-search-submit">Search</button>
+                    <button type="button" class="button button-primary" id="account-search-submit">Search</button>
                   </div>
                   <div id="account_search_results" class="account-search-results" hidden>
                     <p class="account-search-status" id="account-search-status"></p>
@@ -379,22 +378,22 @@ foreach ($eventTypes as $eventType) {
               <div class="admin-grid">
                 <div>
                   <label for="user_login"><strong>UMBC ID</strong></label>
-                  <input type="text" id="user_login" name="user_login" placeholder="AB12345" readonly />
+                  <input type="text" id="user_login" name="user_login" placeholder="AB12345" readonly disabled />
                 </div>
 
                 <div>
                   <label for="user_email"><strong>Email</strong></label>
-                  <input type="email" id="user_email" name="user_email" placeholder="student@umbc.edu" readonly />
+                  <input type="email" id="user_email" name="user_email" placeholder="student@umbc.edu" readonly disabled/>
                 </div>
 
                 <div>
                   <label for="first_name"><strong>First Name</strong></label>
-                  <input type="text" id="first_name" name="first_name" readonly />
+                  <input type="text" id="first_name" name="first_name" readonly disabled/>
                 </div>
 
                 <div>
                   <label for="last_name"><strong>Last Name</strong></label>
-                  <input type="text" id="last_name" name="last_name" readonly />
+                  <input type="text" id="last_name" name="last_name" readonly disabled/>
                 </div>
 
                 <fieldset class="admin-role-box">
@@ -440,7 +439,7 @@ foreach ($eventTypes as $eventType) {
                       <td><?php echo esc_html($user['user_email']); ?></td>
                       <td><?php echo esc_html(display_roles($user['roles'])); ?></td>
                       <td>
-                        <button type="button" class="button button-secondary admin-edit-account">Edit</button>
+                        <button type="button" class="button button-primary admin-edit-account">Edit</button>
                         <button type="button" class="button button-secondary admin-delete-account">Delete</button>
                       </td>
                     </tr>
@@ -450,13 +449,45 @@ foreach ($eventTypes as $eventType) {
             </div>
           </section>
           <?php endif; ?>
+        
+          <?php if ($is_admin) : ?>
+            <section class="admin-section" id="admin-tab-logs">
+              <h2>Audit Logs</h2>
+              <p>View a record of administrative actions taken in 7 day increments. 
+                 Use the navigation buttons to move between data ranges or the Jump to Date dropdown to directly go to a date.
+                 Export logs to download a .txt file of all stored logs.
+              </p>
 
+              <div class="admin-actions">
+              <button type="button" class="button button-primary" id="logs-fetch-btn">Fetch Logs</button>
+              <span class="tutoring-admin-message" id="logs-message" hidden></span>
+            </div>
+
+              <div class="logs-viewer" id="logs-viewer" hidden>
+                <div class="logs-nav">
+                  <button type="button" class="button button-secondary" id="logs-prev-btn" aria-label="Previous week" disabled>&larr; Previous</button>
+                  <span class="logs-date-label" id="logs-date-label"></span>
+                  <button type="button" class="button button-secondary" id="logs-next-btn" aria-label="Next week" disabled>Next &rarr;</button>
+                  <div class="logs-jump">
+                    <label for="logs-jump-date"><strong>Jump To Date</strong></label>
+                    <span></span>
+                    <input type="date" id="logs-jump-date" aria-label="Jump to date" />
+                    <button type="button" class="button button-secondary" id="logs-jump-btn">Go</button>
+                  </div>
+                </div>
+
+                <div class="logs-box" id="logs-box" role="log" aria-live="polite" aria-label="Audit log entries">
+                  <p class="logs-empty" id="logs-empty">No log entries for this day.</p>
+                </div>
+              </div>
+            </section>
+          <?php endif; ?>
         <?php endif; ?>
       </div>
     </article>
   </div>
 </main>
-  
+
 <style>
 .tutoring-admin-tabs,
 .admin-actions {
@@ -696,6 +727,74 @@ foreach ($eventTypes as $eventType) {
 input[readonly] {
     cursor: not-allowed;
     outline: none;
+}
+
+/* Audit Logs */
+.logs-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.logs-date-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  min-width: 120px;
+  text-align: center;
+}
+
+.logs-box {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fafafa;
+  padding: 10px 14px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.logs-empty {
+  margin: 0;
+  color: #888;
+  font-family: inherit;
+  font-style: italic;
+}
+
+.logs-entry {
+  display: block;
+  padding: 3px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.logs-entry:last-child {
+  border-bottom: none;
+}
+
+.logs-viewer {
+  margin-top: 1rem;
+}
+
+.logs-jump {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0px 6px;
+  margin-left: auto;
+}
+
+.logs-jump input[type="date"] {
+  margin-top: 0;
+}
+
+.logs-jump-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 </style>

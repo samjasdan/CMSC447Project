@@ -23,7 +23,7 @@ $current_classes = $is_current ? ' current-menu-item page_item current_page_item
     $is_current = is_page('tutoring-admin');
     $current_classes = $is_current ? ' current-menu-item page_item current_page_item' : '';
     if (current_user_can('staff_control')) {
-        echo '<li class="menu-item menu-item-type-post_type menu-item-object-page ' . $current_classes . '"><a href="' . home_url('/tutoring-admin') . '">Tutoring Admin</a></li>';
+        echo '<li class="menu-item menu-item-type-post_type menu-item-object-page ' . $current_classes . '"><a href="' . home_url('/tutoring-admin') . '">Drop-In Tutoring Management</a></li>';
     }
 
 ?>

@@ -116,24 +116,24 @@ function buildEventRow(e) {
   const eventTypeLabel = typeOption ? typeOption.textContent.trim() : String(e.event_type);
 
   return `
-<tr
-  data-event-id="${e.event_id}"
-  data-user-id="${e.user_id}"
-  data-event-type="${e.event_type}"
-  data-start-day="${e.start_day}"
-  data-final-day="${e.final_day || ''}"
-  data-duration="${e.duration || ''}"
->
-  <td>${userLabel}</td>
-  <td>${eventTypeLabel}</td>
-  <td>${formatDisplayDate(e.start_day)}</td>
-  <td>${finalDay}</td>
-  <td>${duration}</td>
-  <td>
-    <button type="button" class="button button-secondary admin-edit-event">Edit</button>
-    <button type="button" class="button button-secondary admin-delete-event">Delete</button>
-  </td>
-</tr>`;
+    <tr
+      data-event-id="${e.event_id}"
+      data-user-id="${e.user_id}"
+      data-event-type="${e.event_type}"
+      data-start-day="${e.start_day}"
+      data-final-day="${e.final_day || ''}"
+      data-duration="${e.duration || ''}"
+    >
+      <td>${userLabel}</td>
+      <td>${eventTypeLabel}</td>
+      <td>${formatDisplayDate(e.start_day)}</td>
+      <td>${finalDay}</td>
+      <td>${duration}</td>
+      <td>
+        <button type="button" class="button button-primary admin-edit-event">Edit</button>
+        <button type="button" class="button button-secondary admin-delete-event">Delete</button>
+      </td>
+    </tr>`;
 }
 
 const DAY_ABBR = { Monday: 'MON', Tuesday: 'TUE', Wednesday: 'WED', Thursday: 'THU', Friday: 'FRI' };
@@ -170,45 +170,45 @@ function buildScheduleRow(s) {
   const courseLabel = resolveCourseLabel(s.course_id, s);
 
   return `
-<tr
-  data-schedule-id="${s.schedule_id}"
-  data-user-id="${s.user_id}"
-  data-course-id="${s.course_id}"
-  data-day-of-week="${DAY_ABBR[s.day_of_week] ?? s.day_of_week}"
-  data-start-time="${s.start_time}"
-  data-end-time="${s.end_time}"
->
-  <td>${userLabel}</td>
-  <td>${courseLabel}</td>
-  <td>${s.day_of_week}</td>
-  <td>${formatDisplayTime(s.start_time)}</td>
-  <td>${formatDisplayTime(s.end_time)}</td>
-  <td>
-    <button type="button" class="button button-secondary admin-edit-schedule">Edit</button>
-    <button type="button" class="button button-secondary admin-delete-schedule">Delete</button>
-  </td>
-</tr>`;
+    <tr
+      data-schedule-id="${s.schedule_id}"
+      data-user-id="${s.user_id}"
+      data-course-id="${s.course_id}"
+      data-day-of-week="${DAY_ABBR[s.day_of_week] ?? s.day_of_week}"
+      data-start-time="${s.start_time}"
+      data-end-time="${s.end_time}"
+    >
+      <td>${userLabel}</td>
+      <td>${courseLabel}</td>
+      <td>${s.day_of_week}</td>
+      <td>${formatDisplayTime(s.start_time)}</td>
+      <td>${formatDisplayTime(s.end_time)}</td>
+      <td>
+        <button type="button" class="button button-primary admin-edit-schedule">Edit</button>
+        <button type="button" class="button button-secondary admin-delete-schedule">Delete</button>
+      </td>
+    </tr>`;
 }
 
 function buildAccountRow(a) {
   return `
-<tr
-  data-user-id="${a.user_id}"
-  data-user-login="${a.user_login || ''}"
-  data-user-email="${a.user_email || ''}"
-  data-first-name="${a.first_name || ''}"
-  data-last-name="${a.last_name || ''}"
-  data-roles="${(a.roles || []).join(',')}"
->
-  <td>${a.user_login}</td>
-  <td>${a.first_name} ${a.last_name}</td>
-  <td>${a.user_email}</td>
-  <td>${(a.roles || []).map(formatDisplayRole).join(', ')}</td>
-  <td>
-    <button type="button" class="button button-secondary admin-edit-account">Edit</button>
-    <button type="button" class="button button-secondary admin-delete-account">Delete</button>
-  </td>
-</tr>`;
+    <tr
+      data-user-id="${a.user_id}"
+      data-user-login="${a.user_login || ''}"
+      data-user-email="${a.user_email || ''}"
+      data-first-name="${a.first_name || ''}"
+      data-last-name="${a.last_name || ''}"
+      data-roles="${(a.roles || []).join(',')}"
+    >
+      <td>${a.user_login}</td>
+      <td>${a.first_name} ${a.last_name}</td>
+      <td>${a.user_email}</td>
+      <td>${(a.roles || []).map(formatDisplayRole).join(', ')}</td>
+      <td>
+        <button type="button" class="button button-primary admin-edit-account">Edit</button>
+        <button type="button" class="button button-secondary admin-delete-account">Delete</button>
+      </td>
+    </tr>`;
 }
 
 
@@ -353,14 +353,14 @@ let touchmoved;
 
 function chevronButton(text) {
   return `
-<button>
-  <span class="icon-chevron" aria-hidden="true">
-    <svg viewBox="0 0 1024 661" xmlns="http://www.w3.org/2000/svg">
-      <path d="m459.2 639.05c28.8 28.79 76.8 28.79 105.6 0l435.2-435.05c32-32 32-80 0-108.77l-70.4-73.64c-32-28.79-80-28.79-108.8 0l-310.4 310.33-307.2-310.33c-28.8-28.79-76.8-28.79-108.8 0l-70.4 73.59c-32 28.82-32 76.82 0 108.82z"/>
-    </svg>
-  </span>
-  <span class="sr-only">Toggle submenu for ${text}</span>
-</button>`;
+    <button>
+      <span class="icon-chevron" aria-hidden="true">
+        <svg viewBox="0 0 1024 661" xmlns="http://www.w3.org/2000/svg">
+          <path d="m459.2 639.05c28.8 28.79 76.8 28.79 105.6 0l435.2-435.05c32-32 32-80 0-108.77l-70.4-73.64c-32-28.79-80-28.79-108.8 0l-310.4 310.33-307.2-310.33c-28.8-28.79-76.8-28.79-108.8 0l-70.4 73.59c-32 28.82-32 76.82 0 108.82z"/>
+        </svg>
+      </span>
+      <span class="sr-only">Toggle submenu for ${text}</span>
+    </button>`;
 }
 
 function closeAllSubMenus() {
@@ -440,6 +440,7 @@ function enableDesktopNavigation() {
   topLevelMenuItems.forEach(tlmi => {
     tlmi.addEventListener('mouseover', () => {
       topLevelMenuItems.forEach(item => {
+        if (item === tlmi) return;
         item.classList.add('menu-disable');
         item.querySelectorAll('.menu-item').forEach(mi => mi.classList.remove('menu-hover'));
       });
@@ -450,7 +451,8 @@ function enableDesktopNavigation() {
     link.addEventListener('focus', (e) => {
       withMenuInstant(() => {
         topLevelMenuItems.forEach(tlmi => {
-          tlmi.classList.add('menu-disable', 'menu-hover');
+          tlmi.classList.add('menu-disable');
+          tlmi.classList.remove('menu-hover');
           tlmi.querySelectorAll('li').forEach(li => li.classList.remove('menu-hover'));
           tlmi.querySelectorAll('.sub-menu').forEach(sm => sm.classList.remove('open'));
         });
@@ -693,7 +695,7 @@ async function searchUmbc({ endpoint, resultsBoxId, statusElId, listElId, collec
       li.className = 'account-search-item';
       li.innerHTML = `
         <div class="account-search-item-info">${renderItem(item)}</div>
-        <button type="button" class="button button-secondary" style="flex-shrink:0;">Select</button>
+        <button type="button" class="button button-primary" style="flex-shrink:0;">Select</button>
       `;
 
       const selectFn = () => {
@@ -767,7 +769,7 @@ function initAdminUI() {
   $$('.admin-tab').forEach(tab => {
     on(tab, 'click', () => {
 
-      clearMessages(); // 👈 reset messages when switching tabs
+      clearMessages();
 
       $$('.admin-tab').forEach(t => t.classList.remove('active'));
       $$('.admin-section').forEach(s => s.classList.remove('active'));
@@ -869,7 +871,7 @@ function initAdminUI() {
     }
   });
 
-  // --- Delete buttons (delegated) ---
+  // --- Delete buttons ---
 
   const bindDeleteButtons = (selector, getIdFromRow, buildEndpoint, entityLabel) => {
     document.addEventListener('click', async (e) => {
@@ -974,8 +976,7 @@ function initAdminUI() {
     const startTime = $('schedule_start_time').value;
     const endTime   = $('schedule_end_time').value;
 
-    if (!startTime || !endTime) { showMessage('Please select both a start time and end time.', 'error'); return; }
-
+    if (endTime <= startTime) { showMessage('Error: End Time must be after Start Time.', 'error'); return; }
     const id      = $('schedule_id').value.trim();
     const payload = {
       user_id:     Number($('schedule_user_id').value),
@@ -1209,6 +1210,182 @@ function initEventFields() {
   toggleEventFields();
 }
 
+// =============================================================================
+// AUDIT LOGS
+// =============================================================================
+
+function initLogsUI() {
+  const fetchBtn  = $('logs-fetch-btn');
+  const viewer    = $('logs-viewer');
+  const box       = $('logs-box');
+  const emptyMsg  = $('logs-empty');
+  const dateLabel = $('logs-date-label');
+  const prevBtn   = $('logs-prev-btn');
+  const nextBtn   = $('logs-next-btn');
+  const jumpBtn   = $('logs-jump-btn');
+  const jumpInput = $('logs-jump-date');
+  const msgEl     = $('logs-message');
+
+  if (!fetchBtn) return;
+
+  // ---- Dummy data ----
+  const DUMMY_LOGS = (() => {
+    const logs = {};
+    const sep = "\n" + " ".repeat(22);
+    const entries = [
+      [0,  '09:14:02', 'admin (LO89179, Samuel Sudhakar) EDITED schedule entry:' + sep + 
+        'Joseph Williams, STAT 121, Wednesday, 12:45 p.m., 2:30 p.m.' + sep + 
+        'Changed: Tuesday-> Wednesday'],
+      [0,  '14:22:10', 'staff (DA46048, Abe Green) CREATED event:' + sep +
+        'Kaila Garcia, At Capacity, 2026-04-19'],
+      [0,  '11:03:55', 'admin (WB55131, Justin Collier) DELETED event:' + sep +
+        'Kaila Garcia, At Capacity, 2026-04-19'],
+      [1,  '08:45:00', 'admin (WB55131, Justin Collier) CREATED account:' + sep +
+        'NK46421, Chiara Hall, chall@umbc.edu, Tutor'],
+      [1,  '13:10:33', 'staff (DA46048, Abe Green) CREATED event:' + sep +
+        'Dani Martinez, Late, 2026-04-18'],
+      [3,  '10:00:01', 'admin (OI33374, Sam Dolle) DELETED schedule entry:' + sep + 
+        'Aren Garcia, PHYS 121, Friday, 2:00 p.m., 5:00 p.m.'],
+      [4,  '09:30:15', 'admin (OI33374, Sam Dolle) EDITED account:' + sep +
+        'DA46048, Abe Green, agreen@umbc.edu, Tutor;ASC Staff' + sep +
+        'Changed: Tutor -> Tutor;ASC Staff'],
+      [4,  '15:55:42', 'admin (LO89179, Samuel Sudhakar) CREATED event #52'],
+      [4,  '16:01:09', 'admin (LO89179, Samuel Sudhakar) EDITED event #52'],
+      [6,  '11:22:48', 'admin (WB55131, Justin Collier) CREATED schedule entry #43'],
+      [8,  '10:14:00', 'staff (DA46048, Abe Green) DELETED event #10'],
+      [9,  '09:05:31', 'admin (OI33374, Sam Dolle) EDITED account for cjohnson'],
+      [12, '14:00:00', 'admin (OI33374, Sam Dolle) CREATED event #48'],
+      [13, '08:30:22', 'staff (DA46048, Abe Green) EDITED schedule entry #3'],
+      [15, '11:45:09', 'admin (WB55131, Justin Collier) DELETED account for dgreen'],
+      [18, '13:22:55', 'staff (DA46048, Abe Green) CREATED schedule entry #44'],
+      [20, '09:10:00', 'admin (OI33374, Sam Dolle) EDITED event #44'],
+      [21, '16:30:00', 'staff (DA46048, Abe Green) CREATED account for ewhite'],
+      [25, '10:55:12', 'admin (LO89179, Samuel Sudhakar) DELETED event #9'],
+      [27, '12:00:00', 'staff (DA46048, Abe Green) EDITED account for fblack'],
+      [30, '08:00:00', 'admin (OI33374, Sam Dolle) CREATED schedule entry #45'],
+    ];
+    entries.forEach(([daysAgo, time, msg]) => {
+      const d = new Date();
+      d.setDate(d.getDate() - daysAgo);
+      const key = d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      if (!logs[key]) logs[key] = [];
+      logs[key].push(`[${key} ${time}] ${msg}`);
+    });
+    return logs;
+  })();
+  // ---- End dummy data ----
+
+  const allDates   = Object.keys(DUMMY_LOGS).sort();
+  const oldestDate = allDates[0] || toDateKey(new Date());
+
+  let windowStart = null; // set on fetch
+
+  // ---- Date key helpers ----
+
+  function toDateKey(date) {
+    return date.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  }
+
+  function dateFromKey(key) {
+    const [y, m, d] = key.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function addDays(key, n) {
+    const d = dateFromKey(key);
+    d.setDate(d.getDate() + n);
+    return toDateKey(d);
+  }
+
+  function formatLabel(key) {
+    return dateFromKey(key).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+    });
+  }
+
+  // ---- Rendering ----
+
+  function showMessage(text, type = 'success') {
+    if (!msgEl) return;
+    msgEl.textContent = text;
+    msgEl.className   = `tutoring-admin-message ${type}`;
+    msgEl.hidden      = false;
+    setTimeout(() => { msgEl.hidden = true; }, 4000);
+  }
+
+  function renderWindow(startKey) {
+    const todayKey = toDateKey(new Date());
+    if (startKey > todayKey) startKey = todayKey;
+
+    if (startKey < oldestDate) startKey = oldestDate;
+
+    windowStart = startKey;
+    const endKey = addDays(startKey, -6);
+
+    const windowEntries = [];
+    for (let i = 0; i < 7; i++) {
+      const dayKey = addDays(startKey, -i);
+      (DUMMY_LOGS[dayKey] || []).forEach(line => windowEntries.push(line));
+    }
+
+    dateLabel.textContent = `${formatLabel(endKey)} – ${formatLabel(startKey)}`;
+
+    Array.from(box.childNodes).forEach(n => { if (n !== emptyMsg) n.remove(); });
+
+    if (!windowEntries.length) {
+      emptyMsg.hidden = false;
+    } else {
+      emptyMsg.hidden = true;
+      windowEntries.forEach(line => {
+        const span = document.createElement('span');
+        span.className   = 'logs-entry';
+        span.textContent = line;
+        box.appendChild(span);
+      });
+    }
+
+    prevBtn.disabled = endKey <= oldestDate;
+
+    nextBtn.disabled = startKey >= todayKey;
+  }
+
+  on(fetchBtn, 'click', () => {
+  viewer.hidden = false;
+  renderWindow(toDateKey(new Date()));
+  showMessage('Logs loaded.');
+
+  fetchBtn.id        = 'logs-export-btn';
+  fetchBtn.textContent = 'Export Logs';
+  fetchBtn.classList.replace('button-primary', 'button-secondary');
+
+  fetchBtn.addEventListener('click', () => {
+    const allEntries = allDates.flatMap(date => DUMMY_LOGS[date] || []);
+    const blob = new Blob([allEntries.join('\n')], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `audit-logs-full-${toDateKey(new Date())}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, { once: false });
+});
+
+  on(prevBtn, 'click', () => {
+    renderWindow(addDays(windowStart, -7));
+  });
+
+  on(nextBtn, 'click', () => {
+    renderWindow(addDays(windowStart, 7));
+  });
+
+  on(jumpBtn, 'click', () => {
+    const val = jumpInput?.value;
+    if (!val) { showMessage('Select a date first.', 'error'); return; }
+    renderWindow(val);
+    showMessage(`Jumped to week of ${formatLabel(val)}.`);
+  });
+
+}
 
 // =============================================================================
 // BOOT
@@ -1220,4 +1397,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initSubjectFilters();
   initAdminUI();
   initEventFields();
+  initLogsUI();
 });

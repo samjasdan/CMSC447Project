@@ -223,6 +223,11 @@
                                             <li class="menu-item"><a href="https://academicsuccess.umbc.edu/appointment-tutoring/">Appointment Tutoring</a></li>
                                             <li class="menu-item"><a href="https://academicsuccess.umbc.edu/drop-in-tutoring/">Drop-In Tutoring</a></li>
                                             <li class="menu-item"><a href="https://academicsuccess.umbc.edu/writing-center/">Writing Center</a></li>
+                                            <?php 
+                                            if (current_user_can('staff_control')) {
+                                                echo '<li class="menu-item"><a href="' . home_url('/tutoring-admin') . '">Drop-In Tutoring Management</a></li>';
+                                            }
+                                            ?>
                                         </ul>
                                     </li>
                                     <li class="menu-item menu-item-has-children">

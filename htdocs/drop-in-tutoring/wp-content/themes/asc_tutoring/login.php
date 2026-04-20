@@ -138,6 +138,7 @@ Template Name: Login Page
         font-weight: bold;
         height: 24px;
         overflow: hidden;
+        box-sizing: content-box;
       }
 
       p.service .label {

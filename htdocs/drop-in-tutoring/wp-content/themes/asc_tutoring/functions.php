@@ -284,7 +284,7 @@ if (!function_exists("wp_delete_user")) {
             return $make('Called Out', '#da2128', X_ICON_SVG, $le_note, $co_note);
         }
 
-        if (!$is_today || !$is_active_window) {
+        if (!$is_active_window || !$is_today) {
             return $make('Unavailable', '#212121', '', $le_note, $co_note);
         }
 
