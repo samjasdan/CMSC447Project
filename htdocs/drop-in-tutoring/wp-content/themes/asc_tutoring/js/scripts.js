@@ -70,7 +70,9 @@ function findTableRow(tableId, attr, id) {
 
 function removeTableRow(entityLabel, id) {
   const attr = entityLabel !== 'account' ? entityLabel : 'user';
-  findTableRow(`${entityLabel}-table`, `${attr}-id`, id)?.remove();
+  const tableId = `${entityLabel}-table`;
+  findTableRow(tableId, `${attr}-id`, id)?.remove();
+  reapplyTableFilter(tableId);
 }
 
 function upsertTableRow(tableId, attr, id, rowHTML) {
@@ -83,6 +85,8 @@ function upsertTableRow(tableId, attr, id, rowHTML) {
 
   const existing = findTableRow(tableId, attr, id);
   existing ? existing.replaceWith(newRow) : tbody.prepend(newRow);
+
+  reapplyTableFilter(tableId);
 }
 
 function removeTutorRelatedRows(userId) {
@@ -1211,6 +1215,250 @@ function initEventFields() {
 }
 
 // =============================================================================
+// TABLE FILTERING
+// =============================================================================
+
+const TABLE_FILTER_STATE = {};
+
+function normalizeFilterText(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function getFilterableHeaders(table) {
+  const headers = Array.from(table.querySelectorAll('thead th'));
+  return headers
+    .map((th, index) => ({
+      index,
+      label: th.textContent.trim(),
+    }))
+    .filter(col => normalizeFilterText(col.label) !== 'actions');
+}
+
+function getUniqueColumnValues(table, columnIndex, typedValue = '') {
+  const typed = normalizeFilterText(typedValue);
+  const values = new Map();
+
+  table.querySelectorAll('tbody tr').forEach(row => {
+    const raw = row.children[columnIndex]?.textContent?.trim() || '';
+    const normalized = normalizeFilterText(raw);
+    if (!raw) return;
+    if (typed && !normalized.includes(typed)) return;
+    if (!values.has(normalized)) values.set(normalized, raw);
+  });
+
+  return Array.from(values.values()).sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+  );
+}
+
+function applyTableFilter(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+
+  const state = TABLE_FILTER_STATE[tableId];
+  if (!state) return;
+
+  const { appliedColumnIndex, appliedQuery } = state;
+  const normalizedQuery = normalizeFilterText(appliedQuery);
+
+  table.querySelectorAll('tbody tr').forEach(row => {
+    if (appliedColumnIndex === '' || !normalizedQuery) {
+      row.hidden = false;
+      return;
+    }
+
+    const cellValue = row.children[appliedColumnIndex]?.textContent?.trim() || '';
+    row.hidden = normalizeFilterText(cellValue) !== normalizedQuery;
+  });
+}
+
+function refreshAutocompleteList(tableId) {
+  const table = document.getElementById(tableId);
+  const wrapper = document.querySelector(`.admin-table-filter[data-table-id="${tableId}"]`);
+  if (!table || !wrapper) return;
+
+  const select = wrapper.querySelector('.admin-table-filter-select');
+  const input = wrapper.querySelector('.admin-table-filter-input');
+  const box = wrapper.querySelector('.admin-table-filter-suggestions');
+
+  const columnIndex = select.value;
+  const query = input.value.trim();
+
+  if (columnIndex === '' || query === '') {
+    box.hidden = true;
+    box.innerHTML = '';
+    return;
+  }
+
+  const matches = getUniqueColumnValues(table, Number(columnIndex), query).slice(0, 8);
+
+  if (!matches.length) {
+    box.hidden = true;
+    box.innerHTML = '';
+    return;
+  }
+
+  box.innerHTML = matches.map(value => `
+    <button type="button" class="admin-table-filter-suggestion" data-value="${escapeHtml(value)}">
+      ${escapeHtml(value)}
+    </button>
+  `).join('');
+
+  box.hidden = false;
+}
+
+function initTableFilterState(tableId) {
+  TABLE_FILTER_STATE[tableId] = {
+    selectedColumnIndex: '',
+    draftQuery: '',
+    appliedColumnIndex: '',
+    appliedQuery: '',
+  };
+}
+
+function reapplyTableFilter(tableId) {
+  if (!TABLE_FILTER_STATE[tableId]) return;
+  applyTableFilter(tableId);
+}
+
+function buildTableFilterUI(table) {
+  const tableId = table.id;
+  const columns = getFilterableHeaders(table);
+
+  initTableFilterState(tableId);
+
+  const filter = document.createElement('div');
+  filter.className = 'admin-table-filter';
+  filter.dataset.tableId = tableId;
+
+  filter.innerHTML = `
+    <div class="admin-table-filter-row">
+      <label class="admin-table-filter-label">
+        <strong>Filter by</strong>
+      </label>
+
+      <select class="admin-table-filter-select" aria-label="Select filter column for ${tableId}">
+        <option value="">Select column</option>
+        ${columns.map(col => `<option value="${col.index}">${escapeHtml(col.label)}</option>`).join('')}
+      </select>
+
+      <div class="admin-table-filter-search-wrap">
+        <input
+          type="text"
+          class="admin-table-filter-input"
+          placeholder="Start typing to search..."
+          autocomplete="off"
+          disabled
+          aria-label="Filter search for ${tableId}"
+        />
+        <div class="admin-table-filter-suggestions" hidden></div>
+      </div>
+
+      <button type="button" class="button button-primary admin-table-filter-search">
+        Search
+      </button>
+
+      <button type="button" class="button button-secondary admin-table-filter-clear">
+        Clear
+      </button>
+    </div>
+  `;
+
+  table.parentNode.insertBefore(filter, table);
+
+  const select = filter.querySelector('.admin-table-filter-select');
+  const input = filter.querySelector('.admin-table-filter-input');
+  const searchBtn = filter.querySelector('.admin-table-filter-search');
+  const clearBtn = filter.querySelector('.admin-table-filter-clear');
+  const suggestions = filter.querySelector('.admin-table-filter-suggestions');
+
+  select.addEventListener('change', () => {
+    const hasColumn = select.value !== '';
+    input.disabled = !hasColumn;
+    input.value = '';
+    suggestions.hidden = true;
+    suggestions.innerHTML = '';
+
+    TABLE_FILTER_STATE[tableId].selectedColumnIndex = select.value;
+    TABLE_FILTER_STATE[tableId].draftQuery = '';
+
+    if (hasColumn) input.focus();
+  });
+
+  input.addEventListener('input', () => {
+    TABLE_FILTER_STATE[tableId].selectedColumnIndex = select.value;
+    TABLE_FILTER_STATE[tableId].draftQuery = input.value;
+    refreshAutocompleteList(tableId);
+  });
+
+  input.addEventListener('focus', () => {
+    refreshAutocompleteList(tableId);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      suggestions.hidden = true;
+      suggestions.innerHTML = '';
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      searchBtn.click();
+    }
+  });
+
+  suggestions.addEventListener('click', (e) => {
+    const btn = e.target.closest('.admin-table-filter-suggestion');
+    if (!btn) return;
+
+    input.value = btn.dataset.value;
+    TABLE_FILTER_STATE[tableId].draftQuery = input.value;
+
+    suggestions.hidden = true;
+    suggestions.innerHTML = '';
+    input.focus();
+  });
+
+  searchBtn.addEventListener('click', () => {
+    TABLE_FILTER_STATE[tableId].appliedColumnIndex = select.value;
+    TABLE_FILTER_STATE[tableId].appliedQuery = input.value.trim();
+
+    suggestions.hidden = true;
+    suggestions.innerHTML = '';
+
+    applyTableFilter(tableId);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    select.value = '';
+    input.value = '';
+    input.disabled = true;
+    suggestions.hidden = true;
+    suggestions.innerHTML = '';
+
+    initTableFilterState(tableId);
+    applyTableFilter(tableId);
+  });
+}
+
+function initAdminTableFilters() {
+  ['event-table', 'schedule-table', 'account-table'].forEach(tableId => {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    buildTableFilterUI(table);
+  });
+}
+
+// =============================================================================
 // AUDIT LOGS
 // =============================================================================
 
@@ -1395,6 +1643,7 @@ document.addEventListener('DOMContentLoaded', () => {
   handleResize();
   initExpanders();
   initSubjectFilters();
+  initAdminTableFilters();
   initAdminUI();
   initEventFields();
   initLogsUI();
