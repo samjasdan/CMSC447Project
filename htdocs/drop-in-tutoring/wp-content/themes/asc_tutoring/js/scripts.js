@@ -1341,8 +1341,7 @@ function escapeHtml(value) {
 }
 
 function getFilterableHeaders(table) {
-  const headers = Array.from(table.querySelectorAll('thead th'));
-  return headers
+  return Array.from(table.querySelectorAll('thead th'))
     .map((th, index) => ({
       index,
       label: th.textContent.trim(),
@@ -1350,15 +1349,14 @@ function getFilterableHeaders(table) {
     .filter(col => normalizeFilterText(col.label) !== 'actions');
 }
 
-function getUniqueColumnValues(table, columnIndex, typedValue = '') {
-  const typed = normalizeFilterText(typedValue);
+function getUniqueColumnValues(table, columnIndex) {
   const values = new Map();
 
   table.querySelectorAll('tbody tr').forEach(row => {
     const raw = row.children[columnIndex]?.textContent?.trim() || '';
     const normalized = normalizeFilterText(raw);
+
     if (!raw) return;
-    if (typed && !normalized.includes(typed)) return;
     if (!values.has(normalized)) values.set(normalized, raw);
   });
 
@@ -1367,74 +1365,109 @@ function getUniqueColumnValues(table, columnIndex, typedValue = '') {
   );
 }
 
-function applyTableFilter(tableId) {
-  const table = document.getElementById(tableId);
-  if (!table) return;
-
-  const state = TABLE_FILTER_STATE[tableId];
-  if (!state) return;
-
-  const { appliedColumnIndex, appliedQuery } = state;
-  const normalizedQuery = normalizeFilterText(appliedQuery);
-
-  table.querySelectorAll('tbody tr').forEach(row => {
-    if (appliedColumnIndex === '' || !normalizedQuery) {
-      row.hidden = false;
-      return;
-    }
-
-    const cellValue = row.children[appliedColumnIndex]?.textContent?.trim() || '';
-    row.hidden = normalizeFilterText(cellValue) !== normalizedQuery;
-  });
-}
-
-function refreshAutocompleteList(tableId) {
-  const table = document.getElementById(tableId);
-  const wrapper = document.querySelector(`.admin-table-filter[data-table-id="${tableId}"]`);
-  if (!table || !wrapper) return;
-
-  const select = wrapper.querySelector('.admin-table-filter-select');
-  const input = wrapper.querySelector('.admin-table-filter-input');
-  const box = wrapper.querySelector('.admin-table-filter-suggestions');
-
-  const columnIndex = select.value;
-  const query = input.value.trim();
-
-  if (columnIndex === '' || query === '') {
-    box.hidden = true;
-    box.innerHTML = '';
-    return;
-  }
-
-  const matches = getUniqueColumnValues(table, Number(columnIndex), query).slice(0, 8);
-
-  if (!matches.length) {
-    box.hidden = true;
-    box.innerHTML = '';
-    return;
-  }
-
-  box.innerHTML = matches.map(value => `
-    <button type="button" class="admin-table-filter-suggestion" data-value="${escapeHtml(value)}">
-      ${escapeHtml(value)}
-    </button>
-  `).join('');
-
-  box.hidden = false;
-}
-
 function initTableFilterState(tableId) {
   TABLE_FILTER_STATE[tableId] = {
-    selectedColumnIndex: '',
-    draftQuery: '',
     appliedColumnIndex: '',
     appliedQuery: '',
   };
 }
 
+function applyTableFilter(tableId) {
+  const table = document.getElementById(tableId);
+  const state = TABLE_FILTER_STATE[tableId];
+
+  if (!table || !state) return;
+
+  const query = normalizeFilterText(state.appliedQuery);
+
+  table.querySelectorAll('tbody tr').forEach(row => {
+    if (state.appliedColumnIndex === '' || !query) {
+      row.hidden = false;
+      return;
+    }
+
+    const cellValue = row.children[state.appliedColumnIndex]?.textContent?.trim() || '';
+    row.hidden = normalizeFilterText(cellValue) !== query;
+  });
+}
+
 function reapplyTableFilter(tableId) {
   if (!TABLE_FILTER_STATE[tableId]) return;
   applyTableFilter(tableId);
+}
+
+function hasSelect2() {
+  return typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined';
+}
+
+function initTableFilterSelect2(selectEl, placeholder) {
+  if (!hasSelect2() || !selectEl) return;
+
+  const $select = jQuery(selectEl);
+
+  if ($select.hasClass('select2-hidden-accessible')) return;
+
+  $select.select2({
+    width: '100%',
+    allowClear: true,
+    placeholder,
+    minimumResultsForSearch: 0,
+    dropdownParent: $select.closest('.admin-table-filter'),
+  });
+}
+
+function getTableFilterSelectValue(selectEl) {
+  if (!selectEl) return '';
+
+  if (hasSelect2() && jQuery(selectEl).hasClass('select2-hidden-accessible')) {
+    return jQuery(selectEl).val() || '';
+  }
+
+  return selectEl.value || '';
+}
+
+function setTableFilterSelectValue(selectEl, value) {
+  if (!selectEl) return;
+
+  selectEl.value = value;
+
+  if (hasSelect2() && jQuery(selectEl).hasClass('select2-hidden-accessible')) {
+    jQuery(selectEl).val(value).trigger('change.select2');
+  }
+}
+
+function resetTableFilterSearchSelect(searchSelect) {
+  if (!searchSelect) return;
+
+  searchSelect.innerHTML = '<option value=""></option>';
+  searchSelect.disabled = true;
+
+  setTableFilterSelectValue(searchSelect, '');
+}
+
+function rebuildTableFilterSearchOptions(tableId, columnIndex) {
+  const table = document.getElementById(tableId);
+  const wrapper = document.querySelector(`.admin-table-filter[data-table-id="${tableId}"]`);
+  const searchSelect = wrapper?.querySelector('.admin-table-filter-search-select');
+
+  if (!table || !searchSelect) return;
+
+  resetTableFilterSearchSelect(searchSelect);
+
+  if (columnIndex === '') return;
+
+  getUniqueColumnValues(table, Number(columnIndex)).forEach(value => {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = value;
+    searchSelect.appendChild(opt);
+  });
+
+  searchSelect.disabled = false;
+
+  if (hasSelect2()) {
+    jQuery(searchSelect).trigger('change.select2');
+  }
 }
 
 function buildTableFilterUI(table) {
@@ -1453,21 +1486,19 @@ function buildTableFilterUI(table) {
         <strong>Filter by</strong>
       </label>
 
-      <select class="admin-table-filter-select" aria-label="Select filter column for ${tableId}">
-        <option value="">Select column</option>
+      <select class="admin-table-filter-column-select" aria-label="Select filter column for ${tableId}">
+        <option value=""></option>
         ${columns.map(col => `<option value="${col.index}">${escapeHtml(col.label)}</option>`).join('')}
       </select>
 
       <div class="admin-table-filter-search-wrap">
-        <input
-          type="text"
-          class="admin-table-filter-input"
-          placeholder="Start typing to search..."
-          autocomplete="off"
-          disabled
+        <select
+          class="admin-table-filter-search-select"
           aria-label="Filter search for ${tableId}"
-        />
-        <div class="admin-table-filter-suggestions" hidden></div>
+          disabled
+        >
+          <option value=""></option>
+        </select>
       </div>
 
       <button type="button" class="button button-primary admin-table-filter-search">
@@ -1482,77 +1513,43 @@ function buildTableFilterUI(table) {
 
   table.parentNode.insertBefore(filter, table);
 
-  const select = filter.querySelector('.admin-table-filter-select');
-  const input = filter.querySelector('.admin-table-filter-input');
+  const columnSelect = filter.querySelector('.admin-table-filter-column-select');
+  const searchSelect = filter.querySelector('.admin-table-filter-search-select');
   const searchBtn = filter.querySelector('.admin-table-filter-search');
   const clearBtn = filter.querySelector('.admin-table-filter-clear');
-  const suggestions = filter.querySelector('.admin-table-filter-suggestions');
 
-  select.addEventListener('change', () => {
-    const hasColumn = select.value !== '';
-    input.disabled = !hasColumn;
-    input.value = '';
-    suggestions.hidden = true;
-    suggestions.innerHTML = '';
+  initTableFilterSelect2(columnSelect, 'Select column');
+  initTableFilterSelect2(searchSelect, 'Start typing to search...');
 
-    TABLE_FILTER_STATE[tableId].selectedColumnIndex = select.value;
-    TABLE_FILTER_STATE[tableId].draftQuery = '';
+  const handleColumnChange = () => {
+    const columnIndex = getTableFilterSelectValue(columnSelect);
 
-    if (hasColumn) input.focus();
-  });
+    TABLE_FILTER_STATE[tableId].appliedColumnIndex = '';
+    TABLE_FILTER_STATE[tableId].appliedQuery = '';
 
-  input.addEventListener('input', () => {
-    TABLE_FILTER_STATE[tableId].selectedColumnIndex = select.value;
-    TABLE_FILTER_STATE[tableId].draftQuery = input.value;
-    refreshAutocompleteList(tableId);
-  });
+    rebuildTableFilterSearchOptions(tableId, columnIndex);
+    applyTableFilter(tableId);
+  };
 
-  input.addEventListener('focus', () => {
-    refreshAutocompleteList(tableId);
-  });
+  if (hasSelect2()) {
+    jQuery(columnSelect).on('select2:select select2:clear', handleColumnChange);
+  }
 
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      suggestions.hidden = true;
-      suggestions.innerHTML = '';
-    }
-
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      searchBtn.click();
-    }
-  });
-
-  suggestions.addEventListener('click', (e) => {
-    const btn = e.target.closest('.admin-table-filter-suggestion');
-    if (!btn) return;
-
-    input.value = btn.dataset.value;
-    TABLE_FILTER_STATE[tableId].draftQuery = input.value;
-
-    suggestions.hidden = true;
-    suggestions.innerHTML = '';
-    input.focus();
-  });
+  columnSelect.addEventListener('change', handleColumnChange);
 
   searchBtn.addEventListener('click', () => {
-    TABLE_FILTER_STATE[tableId].appliedColumnIndex = select.value;
-    TABLE_FILTER_STATE[tableId].appliedQuery = input.value.trim();
-
-    suggestions.hidden = true;
-    suggestions.innerHTML = '';
+    TABLE_FILTER_STATE[tableId].appliedColumnIndex = getTableFilterSelectValue(columnSelect);
+    TABLE_FILTER_STATE[tableId].appliedQuery = getTableFilterSelectValue(searchSelect);
 
     applyTableFilter(tableId);
   });
 
   clearBtn.addEventListener('click', () => {
-    select.value = '';
-    input.value = '';
-    input.disabled = true;
-    suggestions.hidden = true;
-    suggestions.innerHTML = '';
-
     initTableFilterState(tableId);
+
+    setTableFilterSelectValue(columnSelect, '');
+    resetTableFilterSearchSelect(searchSelect);
+
     applyTableFilter(tableId);
   });
 }
@@ -1561,6 +1558,7 @@ function initAdminTableFilters() {
   ['event-table', 'schedule-table', 'account-table'].forEach(tableId => {
     const table = document.getElementById(tableId);
     if (!table) return;
+
     buildTableFilterUI(table);
   });
 }

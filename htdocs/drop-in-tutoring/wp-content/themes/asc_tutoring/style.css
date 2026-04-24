@@ -13776,101 +13776,62 @@ _:-ms-input-placeholder,
 }
 
 .umbc-logo { position: relative; }
-https://localhost/drop-in-tutoring/wp-login.php?action=wp-saml-auth
 
 .admin-table-filter {
   margin-bottom: 14px;
+  padding: 6px 0;
 }
 
 .admin-table-filter-row {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 4px 0;
 }
 
-/* Label */
+.admin-table-filter-row > * {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
 .admin-table-filter-label {
   display: flex;
   align-items: center;
-  height: 36px;
-  font-size: 13px;
-}
-
-/* Dropdown + Input */
-.admin-table-filter-select,
-.admin-table-filter-input {
   min-height: 36px;
-  padding: 4px 8px;
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
-/* Search input wrapper (for autocomplete positioning) */
+.admin-table-filter-label strong {
+  font-weight: 600;
+}
+
+.admin-table-filter-column-select + .select2-container {
+  width: 160px !important;
+  min-width: 140px;
+  flex: 0 0 160px;
+}
+
 .admin-table-filter-search-wrap {
   position: relative;
-  min-width: 260px;
   flex: 1 1 260px;
+  min-width: 260px;
 }
 
-/* Input */
-.admin-table-filter-input {
-  width: 100%;
+.admin-table-filter-search-wrap .select2-container,
+.admin-table-filter-search-select {
+  width: 100% !important;
 }
 
-/* Disabled input look */
-.admin-table-filter-input:disabled {
-  background-color: #f6f7f7;
-  cursor: not-allowed;
-}
-
-.admin-table-filter-suggestions {
-  position: absolute;
-  top: calc(100% + 2px);
-  left: 0;
-  right: 0;
-  z-index: 50;
-
-  background: #ffffff;
-  border: 1px solid #ccd0d4;
-  border-radius: 4px;
-
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-  max-height: 220px;
-  overflow-y: auto;
-}
-
-.admin-table-filter-suggestion {
-  display: block;
-  width: 100%;
-  padding: 8px 10px;
-
-  border: 0;
-  background: #fff;
-
-  text-align: left;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-/* Hover + keyboard focus */
-.admin-table-filter-suggestion:hover,
-.admin-table-filter-suggestion:focus {
-  background-color: #f6f7f7;
-}
-
-/* Optional: highlight active (if you add keyboard nav later) */
-.admin-table-filter-suggestion.active {
-  background-color: #e0e0e0;
-}
-
-.admin-table-filter .button {
+.admin-table-filter-row .button {
   height: 36px;
+  padding: 0 12px;
+  margin-left: 4px;
   display: flex;
   align-items: center;
 }
 
-/* Primary search button tweak */
 .admin-table-filter-search {
   white-space: nowrap;
 }
@@ -13881,13 +13842,10 @@ https://localhost/drop-in-tutoring/wp-login.php?action=wp-saml-auth
     align-items: stretch;
   }
 
-  .admin-table-filter-search-wrap {
-    width: 100%;
-  }
-
-  .admin-table-filter-select,
-  .admin-table-filter-input,
-  .admin-table-filter .button {
-    width: 100%;
+  .admin-table-filter-search-wrap,
+  .admin-table-filter-column-select + .select2-container,
+  .admin-table-filter-row .button {
+    width: 100% !important;
+    flex: none;
   }
 }
