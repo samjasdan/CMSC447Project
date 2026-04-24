@@ -462,6 +462,7 @@ foreach ($eventTypes as $eventType) {
 
               <div class="admin-actions">
                 <button type="button" class="button button-primary" id="logs-fetch-btn">Fetch Logs</button>
+                <button type="button" class="button button-secondary" id="logs-export-btn" hidden>Export Logs</button>
                 <span class="tutoring-admin-message" id="logs-message" hidden></span>
               </div>
 
@@ -491,6 +492,10 @@ foreach ($eventTypes as $eventType) {
 </main>
 
 <style>
+[hidden] {
+  display: none !important;
+}
+
 .tutoring-admin-tabs,
 .admin-actions {
   display: flex;
@@ -563,6 +568,7 @@ input[type="date"] {
   border-radius: .25rem;
   padding: .25rem .5rem;
   margin: 0;
+  font-family: "Inter var", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 input[type="date" i]:focus {

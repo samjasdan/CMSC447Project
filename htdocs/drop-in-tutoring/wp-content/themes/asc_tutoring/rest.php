@@ -217,6 +217,7 @@
 
     
     function validate_roles($param, $request, $key) {
+        
         if (!is_array($param) || count($param) < 1) {
             return new WP_Error(
                 "invalid_roles",
@@ -237,7 +238,7 @@
             }
         }
 
-        if (in_array(ADMIN_ROLE, $param, true && count($param) > 1)) {
+        if (in_array(ADMIN_ROLE, $param, true) && count($param) > 1) {
             return new WP_Error(
                 "invalid_roles",
                 "ASC Admin cannot be assigned with other roles.",
@@ -986,7 +987,7 @@
         $user = new WP_User($user_id);
 
         if (!$user->exists()) {
-            return new WP_Error("user_not_found", "User does not exist.", ["status" => 404]);
+            return new WP_Error("account_not_found", "Account does not exist.", ["status" => 404]);
         }
 
         $was_tutor = in_array(TUTOR_ROLE, (array) $user->roles, true);
@@ -1158,13 +1159,13 @@
     }
 
     function format_log_actor($user_login, $requester_roles) {
-        $known_roles = [ADMIN_ROLE => "admin", STAFF_ROLE => "staff", TUTOR_ROLE => "tutor"];
+        $known_roles = [ADMIN_ROLE => "admin", STAFF_ROLE => "staff"];
         foreach ($known_roles as $role => $label) {
             if (in_array($role, $requester_roles, true)) {
                 return "$label ($user_login)";
             }
         }
-        return "user ($user_login)";
+        return "UNKNOWN ($user_login)";
     }
 
     function get_log_actor_roles($user_login_field) {
@@ -1172,6 +1173,10 @@
         $user  = get_user_by("login", $login);
         if (!$user) return [];
         return array_intersect((array) $user->roles, [TUTOR_ROLE, STAFF_ROLE, ADMIN_ROLE]);
+    }
+
+    function snake_to_capital_words($value) {
+        return implode(" ", array_map("ucfirst", explode("_", $value)));
     }
 
     function format_log_entry($row) {
@@ -1184,7 +1189,6 @@
         $new_data  = $row["new_data"];
         $date_key  = (new DateTime($row["time_stamp"]))->format("Y-m-d");
 
-        // Human-readable table and action labels
         $table_label = match($table) {
             "schedule" => "schedule entry",
             "events"   => "event",
@@ -1198,18 +1202,29 @@
             default => $action,
         };
 
-        // Data line: new_data for CRE and MOD, old_data for DEL
+        $format_fields = function(array $fields) use ($table): array {
+            return array_filter(
+                array_map(fn($v) => $v === null ? null : ($table === "events" ? snake_to_capital_words($v) : $v), $fields),
+                fn($v) => $v !== null
+            );
+        };
+
         $data_line = $action === "DEL"
-            ? implode(", ", array_filter(parse_audit_csv($old_data), fn($v) => $v !== null))
-            : implode(", ", array_filter(parse_audit_csv($new_data), fn($v) => $v !== null));
+            ? implode(", ", $format_fields(parse_audit_csv($old_data)))
+            : implode(", ", $format_fields(parse_audit_csv($new_data)));
 
         $lines = ["[$date_key $time] $actor $action_label $table_label:\n" . str_repeat(" ", 22) . $data_line];
 
-        // For updates, append the diff line
         if ($action === "MOD" && $old_data !== null && $new_data !== null) {
             $old_fields = parse_audit_csv($old_data);
             $new_fields = parse_audit_csv($new_data);
             $changes    = diff_audit_fields($old_fields, $new_fields);
+            if (!empty($changes) && $table === "events") {
+                $changes = array_map(function($change) {
+                    [$from, $to] = explode(" -> ", $change, 2);
+                    return snake_to_capital_words($from) . " -> " . snake_to_capital_words($to);
+                }, $changes);
+            }
             if (!empty($changes)) {
                 $lines[] = str_repeat(" ", 22) . "Changed: " . implode(", ", $changes);
             }

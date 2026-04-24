@@ -30,7 +30,6 @@ function throttle(callback, limit) {
   };
 }
 
-
 // =============================================================================
 // DISPLAY FORMATTERS
 // =============================================================================
@@ -215,7 +214,6 @@ function buildAccountRow(a) {
     </tr>`;
 }
 
-
 // =============================================================================
 // API CLIENT
 // =============================================================================
@@ -241,7 +239,6 @@ const api = {
     return data;
   },
 };
-
 
 // =============================================================================
 // SLIDE ANIMATIONS
@@ -297,7 +294,6 @@ const DOMAnimations = {
   },
 };
 
-
 // =============================================================================
 // EXPANDERS
 // =============================================================================
@@ -319,7 +315,6 @@ function initExpanders() {
   });
 }
 
-
 // =============================================================================
 // SUBJECT FILTERS
 // =============================================================================
@@ -337,7 +332,6 @@ function initSubjectFilters() {
     });
   });
 }
-
 
 // =============================================================================
 // NAVIGATION
@@ -559,10 +553,31 @@ function enableMobileNavigation() {
   });
 }
 
-
 // =============================================================================
 // ADMIN PANEL
 // =============================================================================
+
+// --- Success/Error Messages
+const messageBoxes = $$('.tutoring-admin-message');
+
+const showMessage = (text, type = 'success') => {
+  messageBoxes.forEach(box => {
+    box.textContent = text;
+    box.className   = `tutoring-admin-message ${type}`;
+    box.hidden      = false;
+    setTimeout(() => { box.hidden = true; }, 4000);
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const clearMessages = () => {
+  messageBoxes.forEach(box => {
+    box.textContent = '';
+    box.classList.remove('success', 'error');
+    box.hidden = true;
+  });
+};
 
 // --- Time Dropdown Helpers ---------------------------------------
 
@@ -747,27 +762,6 @@ function bindLookupForm({ formId, queryId, resultsId, endpoint, collectionKey, h
 // --- Main Admin Init -------------------------------------------
 
 function initAdminUI() {
-  const messageBoxes = $$('.tutoring-admin-message');
-  if (!messageBoxes.length) return;
-
-  const showMessage = (text, type = 'success') => {
-    messageBoxes.forEach(box => {
-      box.textContent = text;
-      box.className   = `tutoring-admin-message ${type}`;
-      box.hidden      = false;
-    });
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const clearMessages = () => {
-    messageBoxes.forEach(box => {
-      box.textContent = '';
-      box.classList.remove('success', 'error');
-      box.hidden = true;
-    });
-  };
-
   // --- Tabs ---
 
   $$('.admin-tab').forEach(tab => {
@@ -821,8 +815,14 @@ function initAdminUI() {
   const setAccountSearchEditable = (editable) => {
     const input = $('account_search_query');
     const btn   = $('account-search-submit');
-    if (input) input.disabled = !editable;
-    if (btn)   btn.disabled   = !editable;
+    if (input) {
+      input.disabled     = !editable;
+      input.style.cursor = editable ? '' : 'not-allowed';
+    }
+    if (btn) {
+      btn.disabled     = !editable;
+      btn.style.cursor = editable ? '' : 'not-allowed';
+    }
   };
 
   const setAccountFormMode = (mode) => {
@@ -849,6 +849,37 @@ function initAdminUI() {
   const setEventFormMode = (mode) => {
     applyFormModeLabels('event-form-mode-label', 'reset-event-form', mode === 'edit', 'Editing Event', 'Create New Event');
   };
+
+  function resetScheduleForm() {
+    scheduleForm.reset();
+    s2reset('schedule_user_id');
+    s2reset('schedule_course_lookup');
+    s2reset('schedule_day_of_week');
+    setTimeDropdowns('schedule_start_time', '');
+    setTimeDropdowns('schedule_end_time', '');
+    $('schedule_id').value = '';
+    setScheduleFormMode('add');
+  }
+
+  function resetEventForm() {
+    eventForm.reset();
+    s2reset('event_user_id');
+    s2reset('event_type');
+    s2reset('duration');
+    $('event_type').selectedIndex = 0;
+    toggleEventFields();
+    $('event_id').value = '';
+    setEventFormMode('add');
+  }
+
+  function resetAccountForm() {
+    accountForm.reset();
+    clearVal('account_user_id');
+    if (accountLookupResults) accountLookupResults.value = '';
+    clearVal('account_search_query');
+    setHidden('account_search_results', true);
+    setAccountFormMode('add');
+  }
 
   // --- Time dropdowns ---
 
@@ -889,7 +920,12 @@ function initAdminUI() {
       try {
         await api.request(buildEndpoint(id), 'DELETE');
         removeTableRow(entityLabel, id);
-        if (entityLabel === 'account') removeTutorRelatedRows(id);
+        if (entityLabel === 'schedule') resetScheduleForm();
+        else if (entityLabel === 'event'   ) resetEventForm();
+        else if (entityLabel === 'account' ) {
+          removeTutorRelatedRows(id);
+          resetAccountForm();
+        }
         showMessage(`Deleted ${entityLabel} ${id}.`);
       } catch (err) {
         showMessage(err.message, 'error');
@@ -1009,6 +1045,22 @@ function initAdminUI() {
       }
     } catch (_) {}
 
+    const existingScheduleRows = Array.from($$('#schedule-table tbody tr'));
+    for (const row of existingScheduleRows) {
+      if (id && row.dataset.scheduleId === id) continue; // skip self when editing
+      if (Number(row.dataset.userId)   !== payload.user_id)   continue;
+      if (Number(row.dataset.courseId) !== payload.course_id) continue;
+      const DAY_UNABBR = { MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday' };
+      const rowDay = DAY_UNABBR[row.dataset.dayOfWeek] || row.dataset.dayOfWeek;
+      if (rowDay !== payload.day_of_week) continue;
+      // Times overlap if new start < existing end AND new end > existing start (no touching allowed)
+      const rowStart = row.dataset.startTime;
+      const rowEnd   = row.dataset.endTime;
+      if (payload.start_time < rowEnd && payload.end_time > rowStart) {
+        showMessage('Error: This schedule entry overlaps an existing one for the same tutor, course, and day.', 'error'); return;
+      }
+    }
+
     try {
       if (id) {
         await api.request(`/schedule/${id}`, 'PATCH', payload);
@@ -1029,14 +1081,7 @@ function initAdminUI() {
       scheduleCourseLookup?.querySelector('option[data-new-course]')?.remove();
       document.querySelectorAll('#course-search-list .account-search-item').forEach(li => li.classList.remove('selected'));
 
-      scheduleForm.reset();
-      s2reset('schedule_user_id');
-      s2reset('schedule_course_lookup');
-      s2reset('schedule_day_of_week');
-      setTimeDropdowns('schedule_start_time', '');
-      setTimeDropdowns('schedule_end_time', '');
-      $('schedule_id').value = '';
-      setScheduleFormMode('add');
+      resetScheduleForm();
 
       if (promotedCourse?.course_id && scheduleCourseLookup) {
         const alreadyExists = Array.from(scheduleCourseLookup.options).some(opt => {
@@ -1070,6 +1115,31 @@ function initAdminUI() {
       duration:   $('duration').value    ? Number($('duration').value) : null,
     };
 
+    if (payload.final_day && payload.start_day && payload.final_day < payload.start_day) {
+      showMessage('Error: Final Day must be the same as or after Start Day.', 'error'); return;
+    }
+
+    const EVENT_TYPE_CALLED_OUT = 1;
+    const existingEventRows = Array.from($$('#event-table tbody tr'));
+    for (const row of existingEventRows) {
+      if (id && row.dataset.eventId === id) continue;
+      if (Number(row.dataset.userId) !== payload.user_id) continue;
+      const rowType = Number(row.dataset.eventType);
+      if (rowType !== payload.event_type) continue;
+
+      if (payload.event_type !== EVENT_TYPE_CALLED_OUT) {
+        showMessage('Error: This tutor already has an event of this type.', 'error'); return;
+      } else {
+        const rowStart = row.dataset.startDay;
+        const rowEnd   = row.dataset.finalDay || row.dataset.startDay;
+        const newStart = payload.start_day;
+        const newEnd   = payload.final_day || payload.start_day;
+        if (newStart <= rowEnd && newEnd >= rowStart) {
+          showMessage('Error: This tutor already has a called out event overlapping that date range.', 'error'); return;
+        }
+      }
+    }
+
     try {
       if (id) {
         await api.request(`/events/${id}`, 'PATCH', payload);
@@ -1080,14 +1150,9 @@ function initAdminUI() {
         upsertTableRow('event-table', 'event-id', data.event_id, buildEventRow({ ...payload, event_id: data.event_id }));
         showMessage(`Created event ${data.event_id}.`);
       }
-      eventForm.reset();
-      s2reset('event_user_id');
-      s2reset('event_type');
-      s2reset('duration');
-      $('event_type').selectedIndex = 0;
-      toggleEventFields();
-      $('event_id').value = '';
-      setEventFormMode('add');
+
+      resetEventForm();
+
     } catch (err) {
       showMessage(err.message, 'error');
     }
@@ -1106,8 +1171,12 @@ function initAdminUI() {
 
     if (!roles.length) { showMessage('Select at least one role.', 'error'); return; }
 
-    const payload = { user_login, user_email, first_name, last_name, roles };
+    const ADMIN_ROLE = 'asc_admin';
+    if (roles.includes(ADMIN_ROLE) && roles.length > 1) {
+      showMessage('ASC Admin cannot be assigned with other roles.', 'error'); return;
+    }
 
+    const payload = { user_login, user_email, first_name, last_name, roles };
     try {
       if (id) {
         await api.request(`/accounts/${id}`, 'PATCH', payload);
@@ -1118,12 +1187,9 @@ function initAdminUI() {
         upsertTableRow('account-table', 'user-id', data.user_id, buildAccountRow({ ...payload, user_id: data.user_id }));
         showMessage(`Created account ${data.user_id}.`);
       }
-      accountForm.reset();
-      clearVal('account_user_id');
-      if (accountLookupResults) accountLookupResults.value = '';
-      clearVal('account_search_query');
-      setHidden('account_search_results', true);
-      setAccountFormMode('add');
+
+      resetAccountForm();
+
     } catch (err) {
       showMessage(err.message, 'error');
     }
@@ -1212,7 +1278,6 @@ function initAdminUI() {
   if (scheduleForm) setScheduleFormMode('add');
 }
 
-
 // =============================================================================
 // EVENT TYPE FIELD TOGGLE
 // =============================================================================
@@ -1229,12 +1294,12 @@ function initEventFields() {
 
   const hideFieldGroup = (group, defaultDate = '') => {
     group.style.display = 'none';
-    group.querySelectorAll('input').forEach(i => { i.removeAttribute('required'); i.value = defaultDate; });
+    group.querySelectorAll('input, select').forEach(i => { i.removeAttribute('required'); i.value = defaultDate; });
   };
 
   const showFieldGroup = (group) => {
     group.style.display = 'block';
-    group.querySelectorAll('input').forEach(i => i.setAttribute('required', ''));
+    group.querySelectorAll('input, select').forEach(i => i.setAttribute('required', ''));
   };
 
   toggleEventFields = function () {
@@ -1506,6 +1571,7 @@ function initAdminTableFilters() {
 
 function initLogsUI() {
   const fetchBtn  = $('logs-fetch-btn');
+  const exportBtn = $('logs-export-btn');
   const viewer    = $('logs-viewer');
   const box       = $('logs-box');
   const emptyMsg  = $('logs-empty');
@@ -1548,14 +1614,6 @@ function initLogsUI() {
 
   // --- Rendering ---
 
-  function showMessage(text, type = 'success') {
-    if (!msgEl) return;
-    msgEl.textContent = text;
-    msgEl.className   = `tutoring-admin-message ${type}`;
-    msgEl.hidden      = false;
-    setTimeout(() => { msgEl.hidden = true; }, 4000);
-  }
-
   function renderWindow(startKey) {
     const todayKey = toDateKey(new Date());
     if (startKey > todayKey) startKey = todayKey;
@@ -1595,6 +1653,18 @@ function initLogsUI() {
       .join('\n');
   }
 
+  // --- Export button (shown after first fetch) ---
+
+  on(exportBtn, 'click', () => {
+    const blob = new Blob([buildExport()], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `audit-logs-full-${toDateKey(new Date())}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
   // --- Fetch ---
 
   on(fetchBtn, 'click', async () => {
@@ -1610,31 +1680,17 @@ function initLogsUI() {
         logsByDate[entry.date].push(entry);
       }
 
-      allDates    = Object.keys(logsByDate).sort();
-      oldestDate  = allDates[0] || toDateKey(new Date());
+      allDates   = Object.keys(logsByDate).sort();
+      oldestDate = allDates[0] || toDateKey(new Date());
 
-      viewer.hidden = false;
+      viewer.hidden      = false;
+      exportBtn.hidden   = false;
       renderWindow(toDateKey(new Date()));
       showMessage('Logs loaded.');
 
-      fetchBtn.id          = 'logs-export-btn';
-      fetchBtn.textContent = 'Export Logs';
-      fetchBtn.disabled    = false;
-      fetchBtn.classList.replace('button-primary', 'button-secondary');
-
-      fetchBtn.addEventListener('click', () => {
-        const blob = new Blob([buildExport()], { type: 'text/plain' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = `audit-logs-full-${toDateKey(new Date())}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }, { once: false });
-
     } catch (err) {
-      console.log(err);
       showMessage('Network error fetching logs.', 'error');
+    } finally {
       fetchBtn.disabled = false;
     }
   });
@@ -1694,8 +1750,6 @@ function initSelect2Dropdowns() {
     const el = document.getElementById('schedule_course_lookup');
     if (!el) return;
 
-    // Always clean up the temp option and course search state
-    // unless the new-course option is itself the current selection
     const selected = el.value ? el.options[el.selectedIndex] : null;
     if (!selected?.dataset?.newCourse) {
       el.querySelector('option[data-new-course]')?.remove();
