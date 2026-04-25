@@ -1726,6 +1726,260 @@ function initLogsUI() {
 
 
 // =============================================================================
+// ADMIN PANEL — IMPORT / EXPORT
+// =============================================================================
+
+function initImportUI() {
+  const importForm      = $('import-form');
+  if (!importForm) return;
+
+  const fileInput       = $('csv_file');
+  const uploadBtn       = $('import-upload-btn');
+  const importMessage   = $('import-message');
+  const resultPanel     = $('import-result-panel');
+  const errorPanel      = $('import-error-panel');
+  const errorBox        = $('import-error-box');
+  const successPanel    = $('import-success-panel');
+  const previewBox      = $('import-preview-box');
+  const confirmBtn      = $('import-confirm-btn');
+  const cancelBtn       = $('import-cancel-btn');
+  const wipeEventsChk   = $('import-wipe-events');
+  const templateLink    = $('import-download-template');
+  const exportLink      = $('import-export-db');
+
+  let pendingToken = null;
+
+  // --- Local message helper (targets only the import message span) ---
+
+  function setImportMessage(text, type = '') {
+    if (!importMessage) return;
+    importMessage.textContent = text;
+    importMessage.className   = 'tutoring-admin-message' + (type ? ' ' + type : '');
+    importMessage.hidden      = !text;
+  }
+
+  function clearImportMessage() {
+    setImportMessage('');
+  }
+
+  // --- Panel helpers ---
+
+  function hideResultPanels() {
+    if (resultPanel)  resultPanel.hidden  = true;
+    if (errorPanel)   errorPanel.hidden   = true;
+    if (successPanel) successPanel.hidden = true;
+    if (errorBox)     errorBox.innerHTML  = '';
+    if (previewBox)   previewBox.innerHTML = '';
+    pendingToken = null;
+  }
+
+  // --- Error renderer (compiler-style, grouped by section) ---
+
+  function renderErrors(errors) {
+    if (!errorBox) return;
+    if (!errors || !errors.length) {
+      errorBox.innerHTML = "<p class='logs-empty'>No errors.</p>";
+      return;
+    }
+
+    const bySection = {};
+    for (const e of errors) {
+      const sec = e.section || 'general';
+      if (!bySection[sec]) bySection[sec] = [];
+      bySection[sec].push(e);
+    }
+
+    const frag = document.createDocumentFragment();
+
+    for (const [section, errs] of Object.entries(bySection)) {
+      const header = document.createElement('span');
+      header.className        = 'logs-entry';
+      header.style.fontWeight = '700';
+      header.style.color      = '#b71c1c';
+      header.textContent      = `[${section.toUpperCase()}]`;
+      frag.appendChild(header);
+
+      for (const e of errs) {
+        const entry    = document.createElement('span');
+        entry.className = 'logs-entry';
+        const rowStr   = e.row   ? `row ${e.row}`   : '';
+        const fieldStr = e.field ? `(${e.field})`   : '';
+        const loc      = [rowStr, fieldStr].filter(Boolean).join(' ');
+        entry.textContent = `  ${loc ? loc + ' \u2014 ' : ''}${e.message}`;
+        frag.appendChild(entry);
+      }
+    }
+
+    errorBox.innerHTML = '';
+    errorBox.appendChild(frag);
+  }
+
+  // --- Preview renderer ---
+
+  function renderPreview(preview) {
+    if (!previewBox) return;
+    previewBox.innerHTML = '';
+    const frag = document.createDocumentFragment();
+
+    const title = document.createElement('span');
+    title.className        = 'logs-entry';
+    title.style.fontWeight = '700';
+    title.textContent      = 'The following data will replace what is currently in the database:';
+    frag.appendChild(title);
+
+    [
+      `  Subjects  : ${preview.subjects}`,
+      `  Courses   : ${preview.courses}`,
+      `  Users     : ${preview.users}`,
+      `  Schedule  : ${preview.schedule} entries`,
+    ].forEach(line => {
+      const entry       = document.createElement('span');
+      entry.className   = 'logs-entry';
+      entry.textContent = line;
+      frag.appendChild(entry);
+    });
+
+    const note = document.createElement('span');
+    note.className        = 'logs-entry';
+    note.style.color      = '#555';
+    note.style.fontStyle  = 'italic';
+    note.textContent      = '  Existing subjects, courses, tutors, schedule, and events will be fully replaced.';
+    frag.appendChild(note);
+
+    previewBox.appendChild(frag);
+  }
+
+  // --- Template download ---
+
+  on(templateLink, 'click', (e) => {
+    e.preventDefault();
+    window.location.href = `${api.root}/asc-tutoring/v1/import/template?_wpnonce=${window.wpApiSettings?.nonce || ''}`;
+  });
+
+  // --- Export current DB ---
+
+  on(exportLink, 'click', (e) => {
+    e.preventDefault();
+    window.location.href = `${api.root}/asc-tutoring/v1/import/export?_wpnonce=${window.wpApiSettings?.nonce || ''}`;
+  });
+
+  // --- Upload & validate (multipart — cannot use api.request) ---
+
+  on(importForm, 'submit', async (e) => {
+    e.preventDefault();
+    clearImportMessage();
+    hideResultPanels();
+
+    const file = fileInput?.files[0];
+    if (!file) {
+      setImportMessage('Please select a CSV file.', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('csv_file', file);
+
+    if (uploadBtn) {
+      uploadBtn.disabled    = true;
+      uploadBtn.textContent = 'Validating\u2026';
+    }
+
+    let data;
+    try {
+      const res = await fetch(`${api.root}/asc-tutoring/v1/import/validate`, {
+        method:  'POST',
+        headers: { 'X-WP-Nonce': window.wpApiSettings?.nonce || '' },
+        body:    formData,
+      });
+      data = await res.json().catch(() => ({}));
+    } catch {
+      setImportMessage('Network error. Please try again.', 'error');
+      if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Validate & Preview'; }
+      return;
+    }
+
+    if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Validate & Preview'; }
+
+    // REST-level error (permission denied, server crash, etc.)
+    if (data.code && data.message) {
+      setImportMessage(data.message, 'error');
+      return;
+    }
+
+    if (resultPanel) resultPanel.hidden = false;
+
+    if (data.status === 'error') {
+      if (errorPanel) errorPanel.hidden = false;
+      renderErrors(data.errors);
+      setImportMessage(
+        `Validation failed \u2014 ${data.errors.length} issue${pluralSuffix(data.errors.length)} found.`,
+        'error'
+      );
+    } else if (data.status === 'success') {
+      pendingToken = data.token;
+      if (successPanel) successPanel.hidden = false;
+      renderPreview(data.preview);
+      setImportMessage('Validation passed. Review the summary and confirm to import.', 'success');
+    } else {
+      setImportMessage('Unexpected response from server.', 'error');
+    }
+  });
+
+  // --- Cancel ---
+
+  on(cancelBtn, 'click', () => {
+    hideResultPanels();
+    clearImportMessage();
+    if (fileInput) fileInput.value = '';
+  });
+
+  // --- Confirm import ---
+
+  on(confirmBtn, 'click', async () => {
+    if (!pendingToken) {
+      setImportMessage('No pending import. Please re-upload the CSV.', 'error');
+      return;
+    }
+
+    if (confirmBtn) {
+      confirmBtn.disabled    = true;
+      confirmBtn.textContent = 'Importing\u2026';
+    }
+    clearImportMessage();
+
+    let data;
+    try {
+      data = await api.request('/import/confirm', 'POST', {
+        token: pendingToken,
+      });
+    } catch (err) {
+      setImportMessage('Import failed: ' + err.message, 'error');
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Confirm Import'; }
+      return;
+    }
+
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Confirm Import'; }
+
+    if (data.success) {
+      const imp = data.imported;
+      hideResultPanels();
+      if (fileInput) fileInput.value = '';
+      setImportMessage(
+        `Import successful \u2014 ` +
+        `${imp.subjects} subject${pluralSuffix(imp.subjects)}, ` +
+        `${imp.courses} course${pluralSuffix(imp.courses)}, ` +
+        `${imp.users} user${pluralSuffix(imp.users)}, ` +
+        `${imp.schedule} schedule entr${imp.schedule !== 1 ? 'ies' : 'y'} loaded.`,
+        'success'
+      );
+    } else {
+      setImportMessage('Import failed. Please try again or contact an administrator.', 'error');
+    }
+  });
+}
+
+
+// =============================================================================
 // SELECT2
 // =============================================================================
 
@@ -1794,5 +2048,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initEventFields();
   initFlatpickrTimePickers();
   initLogsUI();
+  initImportUI();
   initSelect2Dropdowns();
 });

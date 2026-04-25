@@ -40,6 +40,7 @@ if (!function_exists("wp_delete_user")) {
 }
 
 require_once get_template_directory() . "/rest.php";
+require_once get_template_directory() . "/rest-import.php";
 
 add_action("wp_enqueue_scripts", function() {
     wp_enqueue_style(

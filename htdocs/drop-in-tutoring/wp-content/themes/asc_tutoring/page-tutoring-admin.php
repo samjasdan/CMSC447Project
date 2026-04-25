@@ -394,16 +394,17 @@ foreach ($eventTypes as $eventType) {
             </section>
             
             <section class="admin-section" id="admin-tab-import">
-              <h2>Import</h2>
-              <p>Import a tutoring schedule from a CSV file or remove all schedule entries for a specific course.</p>
+              <h2>Bulk Updates</h2>
+              <p>Import subjects, courses, tutors, and the schedule from a CSV file. Download the template for the correct format, or export the current database as a CSV.</p>
 
-              <section class="admin-subsection">
-                <h3>Import Schedule</h3>
-                <p>Upload a CSV file to bulk import schedule entries. Download the template below to ensure your file is formatted correctly.</p>
+              <section class="admin-subsection" id="import-upload-section">
+                <h3>Import CSV</h3>
+                <p>Upload a formatted CSV to replace all subjects, courses, tutors, and schedule entries. The file will be validated before any changes are made.</p>
                 <div class="admin-actions" style="margin-top: 0;">
-                  <a href="#" class="button button-secondary" id="import-download-template">Download CSV Template</a>
+                  <a href="#" class="button button-secondary" id="import-download-template">&#8595; Download Template</a>
+                  <a href="#" class="button button-secondary" id="import-export-db">&#8593; Export Current Database</a>
                 </div>
-                <form class="tutoring-admin-form" id="import-form">
+                <form class="tutoring-admin-form" id="import-form" style="margin-top: 1rem;">
                   <div class="admin-grid">
                     <div>
                       <label for="csv_file"><strong>Select CSV File</strong></label>
@@ -411,13 +412,27 @@ foreach ($eventTypes as $eventType) {
                     </div>
                   </div>
                   <div class="admin-actions">
-                    <button type="submit" class="button button-primary">Upload</button>
+                    <button type="submit" class="button button-primary" id="import-upload-btn">Validate &amp; Preview</button>
                     <span class="tutoring-admin-message" id="import-message" hidden></span>
                   </div>
                 </form>
+                <div id="import-result-panel" hidden style="margin-top: 1rem;">
+                  <div id="import-error-panel" hidden>
+                    <h4 style="margin-bottom: 0.5rem; color: #b71c1c;">&#10007; Validation Failed</h4>
+                    <div class="logs-box" id="import-error-box" role="log" aria-label="Import validation errors"></div>
+                  </div>
+                  <div id="import-success-panel" hidden>
+                    <h4 style="margin-bottom: 0.5rem; color: #1b5e20;">&#10003; Validation Passed — Review &amp; Confirm</h4>
+                    <div class="logs-box" id="import-preview-box" role="log" aria-label="Import preview"></div>
+                    <div class="admin-actions" style="margin-top: 1rem; align-items: center;">
+                      <button type="button" class="button button-primary" id="import-confirm-btn">Confirm Import</button>
+                      <button type="button" class="button button-secondary" id="import-cancel-btn">Cancel</button>
+                    </div>
+                  </div>
+                </div>
               </section>
 
-              <section class="admin-subsection">
+              <section class="admin-subsection" style="margin-top: 1rem;">
                 <h3>Delete Schedule Entries by Course</h3>
                 <p>Select a course below and delete all associated schedule entries. This action cannot be undone.</p>
                 <div class="umbc-table-wrapper">
@@ -527,6 +542,10 @@ input:disabled {
   background: #fff;
 }
 
+.admin-subsection + .admin-subsection {
+  margin-top: 16px;
+}
+
 .admin-section.active {
   display: block;
 }
@@ -588,6 +607,10 @@ input[type="date" i]:focus-visible {
 .admin-table td,
 .admin-table th {
   vertical-align: top;
+}
+
+.admin-section .umbc-table-wrapper {
+  margin-bottom: 0;
 }
 
 .entry-content .admin-table td:last-child,
