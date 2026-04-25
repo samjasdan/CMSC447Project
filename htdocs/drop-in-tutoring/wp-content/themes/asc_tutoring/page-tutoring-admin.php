@@ -101,8 +101,8 @@ foreach ($eventTypes as $eventType) {
                   </div>
 
                   <div id="leaving-early-field">
-                    <label for="leaving_time"><strong>Time</strong></label>
-                    <input type="time" id="leaving_time" name="leaving_time" />
+                    <label for="leaving_time_picker"><strong>Time</strong></label>
+                    <input type="text" id="leaving_time_picker" placeholder="Select time" autocomplete="off" />
                   </div>
                   
                 </div>
@@ -210,67 +210,13 @@ foreach ($eventTypes as $eventType) {
                     </div>
 
                     <div>
-                      <label><strong>Start Time</strong></label>
-                      <div class="time-select-row">
-                        <div class="time-select-col">
-                          <label for="schedule_start_time_hour" class="time-select-label">Hour</label>
-                          <select id="schedule_start_time_hour" aria-label="Start time hour" required>
-                            <option value="">-</option>
-                            <?php tutoring_hour_options(); ?>
-                          </select>
-                        </div>
-
-                        <div class="time-select-col">
-                          <label for="schedule_start_time_minute" class="time-select-label">Minute</label>
-                          <select id="schedule_start_time_minute" aria-label="Start time minute" required>
-                            <option value="">-</option>
-                            <?php tutoring_minute_options(pad: true); ?>
-                          </select>
-                        </div>
-
-                        <div class="time-select-col">
-                          <label for="schedule_start_time_ampm" class="time-select-label">a.m./p.m.</label>
-                          <select id="schedule_start_time_ampm" aria-label="Start time AM or PM" required>
-                            <option value="">-</option>
-                            <option value="a.m.">a.m.</option>
-                            <option value="p.m.">p.m.</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <input type="hidden" id="schedule_start_time" name="start_time" required />
+                      <label for="schedule_start_time_picker"><strong>Start Time</strong></label>
+                      <input type="text" id="schedule_start_time_picker" placeholder="Select time" autocomplete="off" />
                     </div>
 
                     <div>
-                      <label><strong>End Time</strong></label>
-                      <div class="time-select-row">
-                        <div class="time-select-col">
-                          <label for="schedule_end_time_hour" class="time-select-label">Hour</label>
-                          <select id="schedule_end_time_hour" aria-label="End time hour" required>
-                            <option value="">-</option>
-                            <?php tutoring_hour_options(); ?>
-                          </select>
-                        </div>
-
-                        <div class="time-select-col">
-                          <label for="schedule_end_time_minute" class="time-select-label">Minute</label>
-                          <select id="schedule_end_time_minute" aria-label="End time minute" required>
-                            <option value="">-</option>
-                            <?php tutoring_minute_options(pad: true); ?>
-                          </select>
-                        </div>
-
-                        <div class="time-select-col">
-                          <label for="schedule_end_time_ampm" class="time-select-label">a.m./p.m.</label>
-                          <select id="schedule_end_time_ampm" aria-label="End time AM or PM" required>
-                            <option value="">-</option>
-                            <option value="a.m.">a.m.</option>
-                            <option value="p.m.">p.m.</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <input type="hidden" id="schedule_end_time" name="end_time" required />
+                      <label for="schedule_end_time_picker"><strong>End Time</strong></label>
+                      <input type="text" id="schedule_end_time_picker" placeholder="Select time" autocomplete="off" />
                     </div>
 
                     <input type="hidden" id="schedule_course_id" name="course_id" required />
@@ -545,6 +491,11 @@ foreach ($eventTypes as $eventType) {
 [hidden] {
   display: none !important;
 }
+
+input:disabled {
+    background-color: #eee;
+}
+
 .tutoring-admin-tabs,
 .admin-actions {
   display: flex;
@@ -597,7 +548,6 @@ foreach ($eventTypes as $eventType) {
 .tutoring-admin-form input,
 .tutoring-admin-form select {
   width: 100%;
-  margin-top: 6px;
 }
 
 .admin-role-box {
@@ -676,7 +626,7 @@ input[type="date" i]:focus-visible {
 .tutoring-admin-form select.account-field-locked,
 .tutoring-admin-form select:disabled {
   background: #f3f4f6 !important;
-  color: #666 !important;
+  color: #eee !important;
   cursor: not-allowed;
   opacity: 1;
   border-color: #d1d5db;
@@ -883,13 +833,52 @@ input[readonly] {
   gap: 4px;
 }
 
+.flatpickr-input {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right .5rem center;
+  background-size: 1rem .8rem;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.flatpickr-input:focus {
+  outline: 0;
+  box-shadow: 0 0 0 3px #1c74bc;
+  border-color: #737373;
+}
+
+.flatpickr-calendar {
+  width: 100% !important;
+  box-sizing: border-box;
+  box-shadow: 0 0 0 3px #1c74bc;
+  border: 1px solid #737373;
+  border-radius: .25rem;
+  font-family: "Inter var", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+}
+
+.admin-section .flatpickr-time input.flatpickr-minute,
+.admin-section .flatpickr-time input.flatpickr-hour {
+  border: none;
+}
+
+.admin-section .flatpickr-time input.flatpickr-minute:focus,
+.admin-section .flatpickr-time input.flatpickr-hour:focus {
+  border: none;
+  box-shadow: none;
+}
+.flatpickr-wrapper {
+  width: 100%;
+}
+
 .select2-container--default .select2-selection--single {
   height: 32.39px;
   background-color: #fff;
   border: 1px solid #737373;
   border-radius: .25rem;
   box-sizing: border-box;
-  cursor: default;
+  cursor: pointer;
   display: block;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
@@ -985,6 +974,10 @@ input[readonly] {
   z-index: 1;
 }
 
+.select2-container--default.select2-container--disabled .select2-selection--single {
+    background-color: #eee;
+    cursor: not-allowed;
+}
 </style>
 
 <?php get_footer(); ?>

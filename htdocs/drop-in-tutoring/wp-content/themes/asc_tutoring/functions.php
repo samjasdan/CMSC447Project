@@ -55,11 +55,24 @@ add_action("wp_enqueue_scripts", function() {
         "4.1.0",
         true
     );
+    wp_enqueue_style(
+        'flatpickr',
+        'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css',
+        [],
+        '4.6.13'
+    );
     wp_enqueue_script(
-        "scripts",
-        get_template_directory_uri() . "/js/scripts.js",
-        ["select2"],
-        "1.0",
+        'flatpickr',
+        'https://cdn.jsdelivr.net/npm/flatpickr',
+        [],
+        '4.6.13',
+        true
+    );
+    wp_enqueue_script(
+        'scripts',
+        get_template_directory_uri() . '/js/scripts.js',
+        ['select2', 'flatpickr'],
+        '1.0',
         true
     );
     wp_localize_script("scripts", "wpApiSettings", [

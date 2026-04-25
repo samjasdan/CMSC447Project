@@ -552,6 +552,39 @@
             "permission_callback" => function() { return current_user_can("admin_control"); },
         ]);
     });
+
+    // umbc_db REST API
+    add_action("rest_api_init", function() {
+        register_rest_route("asc-tutoring/v1", "/umbc_db/accounts", [
+            "methods"             => "GET",
+            "callback"            => "get_umbc_accounts",
+            "permission_callback" => function() {
+                return current_user_can("admin_control");
+            },
+            "args" => [
+                "search_str" => [
+                    "required"          => false,
+                    "sanitize_callback" => "sanitize_text_field",
+                    "default"           => "",
+                ]
+            ],
+        ]);
+
+        register_rest_route("asc-tutoring/v1", "/umbc_db/courses", [
+            "methods"             => "GET",
+            "callback"            => "get_umbc_courses",
+            "permission_callback" => function() {
+                return current_user_can("admin_control");
+            },
+            "args" => [
+                "search_str" => [
+                    "required"          => false,
+                    "sanitize_callback" => "sanitize_text_field",
+                    "default"           => "",
+                ]
+            ],
+        ]);
+    });
 }
 //---------------------------------------------------------------------------------------------------------------------
 
