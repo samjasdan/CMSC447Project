@@ -160,6 +160,12 @@ add_filter("login_redirect", function($redirect_to, $request, $user) {
     return home_url();
 }, 10, 3);
 
+add_action("login_init", function() {
+    if (isset($_GET["SAMLResponse"])) {
+        wp_redirect(home_url());
+        exit;
+    }
+});
 
 // Utility Functions
 //---------------------------------------------------------------------------------------------------------------------

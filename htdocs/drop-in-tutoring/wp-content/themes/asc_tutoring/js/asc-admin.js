@@ -118,7 +118,7 @@ function initScheduleSelect2(scheduleCourseLookup) {
     const selected = el.value ? el.options[el.selectedIndex] : null;
     if (!selected?.dataset?.newCourse) {
       el.querySelector('option[data-new-course]')?.remove();
-      $$('#course-search-list .account-search-item').forEach(li => li.classList.remove('selected'));
+      $$('#course-search-list .search-item').forEach(li => li.classList.remove('selected'));
       clearVal('course_lookup_results');
     }
 
@@ -133,11 +133,8 @@ function initScheduleSelect2(scheduleCourseLookup) {
 // =============================================================================
 
 function initAdminTables() {
-  ['schedule-table', 'account-table'].forEach(tableId => {
-    const table = $(tableId);
-    if (!table) return;
-    buildTableFilterUI(table);
-    addSortArrowsToTable(table);
+  ['schedule-table', 'account-table', 'import-course-table'].forEach(tableId => {
+    initAdminTable(tableId);
   });
 }
 
@@ -183,14 +180,14 @@ async function searchUmbc({ endpoint, resultsBoxId, statusElId, listElId, collec
 
     items.forEach(item => {
       const li = document.createElement('li');
-      li.className = 'account-search-item';
+      li.className = 'search-item';
       li.innerHTML = `
-        <div class="account-search-item-info">${renderItem(item)}</div>
+        <div class="search-item-info">${renderItem(item)}</div>
         <button type="button" class="button button-primary" style="flex-shrink:0;">Select</button>
       `;
 
       const selectFn = () => {
-        listEl.querySelectorAll('.account-search-item').forEach(el => el.classList.remove('selected'));
+        listEl.querySelectorAll('.search-item').forEach(el => el.classList.remove('selected'));
         li.classList.add('selected');
         onSelect(item);
         showMessage(`Selected: ${getLabel(item)}`, 'success');
@@ -278,7 +275,27 @@ function loadAccountIntoForm(row, accountForm, accountLookupResults, setAccountF
 // ADMIN PANEL — SCHEDULE SECTION
 // =============================================================================
 
+// Snapshot of schedule form values loaded during edit
+let _scheduleFormSnapshot = null;
+
+function captureScheduleFormSnapshot() {
+  _scheduleFormSnapshot = {
+    user_id:    $('schedule_user_id').value,
+    course_id:  $('schedule_course_id').value,
+    day_of_week:$('schedule_day_of_week').value,
+    start_time: getFlatpickrTimeString('schedule_start_time_picker') || '',
+    end_time:   getFlatpickrTimeString('schedule_end_time_picker')   || '',
+  };
+}
+
+function clearScheduleFormSnapshot() {
+  _scheduleFormSnapshot = null;
+}
+
 function initScheduleSection(scheduleForm, scheduleCourseLookup, setScheduleFormMode, resetScheduleForm, SCHEDULE_FIELD_IDS) {
+  // Remove native required attributes — validation is handled manually
+  scheduleForm.querySelectorAll('[required]').forEach(el => el.removeAttribute('required'));
+
   // --- Course lookup dropdown (non-Select2 fallback) ---
 
   on(scheduleCourseLookup, 'change', () => {
@@ -287,7 +304,7 @@ function initScheduleSection(scheduleForm, scheduleCourseLookup, setScheduleForm
     const selected = scheduleCourseLookup.options[scheduleCourseLookup.selectedIndex];
     if (!selected.dataset.newCourse) {
       scheduleCourseLookup.querySelector('option[data-new-course]')?.remove();
-      $$('#course-search-list .account-search-item').forEach(el => el.classList.remove('selected'));
+      $$('#course-search-list .search-item').forEach(el => el.classList.remove('selected'));
       clearVal('course_lookup_results');
     }
     try { setVal('schedule_course_id', JSON.parse(scheduleCourseLookup.value).course_id || ''); } catch (_) {}
@@ -302,8 +319,8 @@ function initScheduleSection(scheduleForm, scheduleCourseLookup, setScheduleForm
     listElId:      'course-search-list',
     collectionKey: 'umbc_courses',
     renderItem:    (c) => `
-      <span class="account-search-item-name">${c.course_subject} ${c.course_code} \u2014 ${c.course_name}</span>
-      <span class="account-search-item-meta">${c.subject_name}</span>`,
+      <span class="search-item-name">${c.course_subject} ${c.course_code} \u2014 ${c.course_name}</span>
+      <span class="search-item-meta">${c.subject_name}</span>`,
     onSelect: (course) => {
       const courseLookupResults = $('course_lookup_results');
       if (courseLookupResults) courseLookupResults.value = JSON.stringify(course);
@@ -336,14 +353,55 @@ function initScheduleSection(scheduleForm, scheduleCourseLookup, setScheduleForm
 
   on(scheduleForm, 'submit', async (e) => {
     e.preventDefault();
+    clearFieldErrors(scheduleForm);
 
+    const id     = $('schedule_id').value.trim();
+    const isEdit = !!id;
+
+    // ---- Required: Tutor ----
+    if (!$('schedule_user_id').value) {
+      showFieldError('schedule_user_id', 'Please select a tutor.');
+      showMessage('Error: Tutor is required.', 'error');
+      return;
+    }
+
+    // ---- Required: Course (via hidden course_id, may come from lookup or dropdown) ----
+    if (!$('schedule_course_id').value) {
+      showFieldError('schedule_course_lookup', 'Please select a course.');
+      showMessage('Error: Course is required.', 'error');
+      return;
+    }
+
+    // ---- Required: Day ----
+    if (!$('schedule_day_of_week').value) {
+      showFieldError('schedule_day_of_week', 'Please select a day.');
+      showMessage('Error: Day is required.', 'error');
+      return;
+    }
+
+    // ---- Required: Start Time ----
     const startTime = getFlatpickrTimeString('schedule_start_time_picker');
-    const endTime   = getFlatpickrTimeString('schedule_end_time_picker');
+    if (!startTime) {
+      showFieldError('schedule_start_time_picker', 'Please select a start time.');
+      showMessage('Error: Start Time is required.', 'error');
+      return;
+    }
 
-    if (!startTime || !endTime) { showMessage('Error: Start Time and End Time are required.', 'error'); return; }
-    if (endTime <= startTime)   { showMessage('Error: End Time must be after Start Time.', 'error'); return; }
+    // ---- Required: End Time ----
+    const endTime = getFlatpickrTimeString('schedule_end_time_picker');
+    if (!endTime) {
+      showFieldError('schedule_end_time_picker', 'Please select an end time.');
+      showMessage('Error: End Time is required.', 'error');
+      return;
+    }
 
-    const id      = $('schedule_id').value.trim();
+    // ---- End Time must be strictly after Start Time ----
+    if (endTime <= startTime) {
+      showFieldError('schedule_end_time_picker', 'End Time must be after Start Time.');
+      showMessage('Error: End Time must be after Start Time.', 'error');
+      return;
+    }
+
     const payload = {
       user_id:     Number($('schedule_user_id').value),
       course_id:   Number($('schedule_course_id').value),
@@ -367,19 +425,45 @@ function initScheduleSection(scheduleForm, scheduleCourseLookup, setScheduleForm
       }
     } catch (_) {}
 
+    // ---- Overlap check ----
     for (const row of $$('#schedule-table tbody tr')) {
-      if (id && row.dataset.scheduleId === id) continue;
+      if (isEdit && row.dataset.scheduleId === id) continue;
       if (Number(row.dataset.userId)   !== payload.user_id)   continue;
       if (Number(row.dataset.courseId) !== payload.course_id) continue;
       const rowDay = DAY_UNABBR[row.dataset.dayOfWeek] || row.dataset.dayOfWeek;
       if (rowDay !== payload.day_of_week) continue;
       if (payload.start_time < row.dataset.endTime && payload.end_time > row.dataset.startTime) {
-        showMessage('Error: This schedule entry overlaps an existing one for the same tutor, course, and day.', 'error'); return;
+        showMessage('Error: This schedule entry overlaps an existing one for the same tutor, course, and day.', 'error');
+        return;
       }
     }
 
+    // ---- Edit mode: require at least one changed field ----
+    if (isEdit && _scheduleFormSnapshot) {
+      const current = {
+        user_id:     String(payload.user_id),
+        course_id:   String(payload.course_id),
+        day_of_week: payload.day_of_week,
+        start_time:  startTime,
+        end_time:    endTime,
+      };
+      const snap = {
+        user_id:     _scheduleFormSnapshot.user_id,
+        course_id:   _scheduleFormSnapshot.course_id,
+        day_of_week: _scheduleFormSnapshot.day_of_week,
+        start_time:  _scheduleFormSnapshot.start_time,
+        end_time:    _scheduleFormSnapshot.end_time,
+      };
+      const changed = Object.keys(current).some(k => current[k] !== snap[k]);
+      if (!changed) {
+        showMessage('No changes detected — update at least one field before saving.', 'error');
+        return;
+      }
+    }
+
+    // ---- Submit ----
     try {
-      if (id) {
+      if (isEdit) {
         await api.request(`/schedule/${id}`, 'PATCH', payload);
         upsertTableRow('schedule-table', 'schedule-id', id, buildScheduleRow({ ...payload, schedule_id: id }));
         showMessage(`Updated schedule entry ${id}.`);
@@ -397,8 +481,9 @@ function initScheduleSection(scheduleForm, scheduleCourseLookup, setScheduleForm
       }
 
       scheduleCourseLookup?.querySelector('option[data-new-course]')?.remove();
-      $$('#course-search-list .account-search-item').forEach(li => li.classList.remove('selected'));
+      $$('#course-search-list .search-item').forEach(li => li.classList.remove('selected'));
 
+      clearScheduleFormSnapshot();
       resetScheduleForm();
 
       if (promotedCourse?.course_id && scheduleCourseLookup) {
@@ -426,18 +511,39 @@ function initScheduleSection(scheduleForm, scheduleCourseLookup, setScheduleForm
 // ADMIN PANEL — ACCOUNT SECTION
 // =============================================================================
 
+// Snapshot of account form values loaded during edit
+let _accountFormSnapshot = null;
+
+function captureAccountFormSnapshot(accountForm) {
+  const roles = Array.from(accountForm.querySelectorAll('input[name="roles[]"]:checked')).map(el => el.value).sort();
+  _accountFormSnapshot = {
+    user_login: $('user_login').value.trim(),
+    user_email: $('user_email').value.trim(),
+    first_name: $('first_name').value.trim(),
+    last_name:  $('last_name').value.trim(),
+    roles:      roles.join(','),
+  };
+}
+
+function clearAccountFormSnapshot() {
+  _accountFormSnapshot = null;
+}
+
 function initAccountSection(accountForm, accountLookupResults, setAccountFormMode, resetAccountForm, ACCOUNT_FIELD_IDS) {
+  // Remove native required attributes — validation is handled manually
+  accountForm.querySelectorAll('[required]').forEach(el => el.removeAttribute('required'));
+
   // --- UMBC account search ---
 
   const searchUmbcAccounts = (query) => searchUmbc({
     endpoint:      `/umbc_db/accounts?search_str=${encodeURIComponent(query)}`,
     resultsBoxId:  'account_search_results',
-    statusElId:    'account-search-status',
-    listElId:      'account-search-list',
+    statusElId:    'search-status',
+    listElId:      'search-list',
     collectionKey: 'umbc_accounts',
     renderItem:    (a) => `
-      <span class="account-search-item-name">${a.first_name} ${a.last_name}</span>
-      <span class="account-search-item-meta">${a.umbc_id} &bull; ${a.umbc_email}</span>`,
+      <span class="search-item-name">${a.first_name} ${a.last_name}</span>
+      <span class="search-item-meta">${a.umbc_id} &bull; ${a.umbc_email}</span>`,
     onSelect: (account) => {
       if (accountLookupResults) accountLookupResults.value = JSON.stringify(account);
       setVal('user_login', account.umbc_id    || '');
@@ -449,7 +555,7 @@ function initAccountSection(accountForm, accountLookupResults, setAccountFormMod
     getLabel: (a) => `${a.first_name} ${a.last_name} (${a.umbc_id})`,
   });
 
-  on($('account-search-submit'), 'click', async () => {
+  on($('search-submit'), 'click', async () => {
     const query = $('account_search_query').value.trim();
     if (!query) { showMessage('Please enter a search term.', 'error'); return; }
     if (accountLookupResults) accountLookupResults.value = '';
@@ -458,29 +564,72 @@ function initAccountSection(accountForm, accountLookupResults, setAccountFormMod
     await searchUmbcAccounts(query);
   });
 
-  onEnter($('account_search_query'), () => $('account-search-submit')?.click());
+  onEnter($('account_search_query'), () => $('search-submit')?.click());
 
   // --- Account form submit ---
 
   on(accountForm, 'submit', async (e) => {
     e.preventDefault();
+    clearFieldErrors(accountForm);
+
     const id         = $('account_user_id').value.trim();
+    const isEdit     = !!id;
     const user_login = $('user_login').value.trim();
     const user_email = $('user_email').value.trim();
     const first_name = $('first_name').value.trim();
     const last_name  = $('last_name').value.trim();
     const roles      = Array.from(accountForm.querySelectorAll('input[name="roles[]"]:checked')).map(el => el.value);
 
-    if (!roles.length) { showMessage('Select at least one role.', 'error'); return; }
+    // ---- Required: all identity fields must have a value ----
+    if (!user_login) {
+      showMessage('Error: An account must be selected via the search before saving.', 'error');
+      return;
+    }
+    if (!user_email) {
+      showMessage('Error: Email is required.', 'error');
+      return;
+    }
+    if (!first_name) {
+      showMessage('Error: First Name is required.', 'error');
+      return;
+    }
+    if (!last_name) {
+      showMessage('Error: Last Name is required.', 'error');
+      return;
+    }
 
+    // ---- Required: at least one role ----
+    if (!roles.length) {
+      showMessage('Error: Select at least one role.', 'error');
+      return;
+    }
+
+    // ---- asc_admin is mutually exclusive ----
     const ADMIN_ROLE = 'asc_admin';
     if (roles.includes(ADMIN_ROLE) && roles.length > 1) {
-      showMessage('ASC Admin cannot be assigned with other roles.', 'error'); return;
+      showMessage('Error: ASC Admin cannot be assigned with other roles.', 'error');
+      return;
+    }
+
+    // ---- Edit mode: require at least one changed field ----
+    if (isEdit && _accountFormSnapshot) {
+      const current = {
+        user_login,
+        user_email,
+        first_name,
+        last_name,
+        roles: roles.slice().sort().join(','),
+      };
+      const changed = Object.keys(current).some(k => current[k] !== _accountFormSnapshot[k]);
+      if (!changed) {
+        showMessage('No changes detected — update at least one field before saving.', 'error');
+        return;
+      }
     }
 
     const payload = { user_login, user_email, first_name, last_name, roles };
     try {
-      if (id) {
+      if (isEdit) {
         await api.request(`/accounts/${id}`, 'PATCH', payload);
         upsertTableRow('account-table', 'user-id', id, buildAccountRow({ ...payload, user_id: id }));
         showMessage(`Updated account ${id}.`);
@@ -489,6 +638,7 @@ function initAccountSection(accountForm, accountLookupResults, setAccountFormMod
         upsertTableRow('account-table', 'user-id', data.user_id, buildAccountRow({ ...payload, user_id: data.user_id }));
         showMessage(`Created account ${data.user_id}.`);
       }
+      clearAccountFormSnapshot();
       resetAccountForm();
     } catch (err) {
       showMessage(err.message, 'error');
@@ -933,7 +1083,7 @@ function initAdminUI() {
 
   const setAccountSearchEditable = (editable) => {
     const input = $('account_search_query');
-    const btn   = $('account-search-submit');
+    const btn   = $('search-submit');
     [input, btn].forEach(el => {
       if (!el) return;
       el.disabled     = !editable;
@@ -988,7 +1138,7 @@ function initAdminUI() {
     clearVal('account_user_id');
     clearVal('account_search_query');
     if (accountLookupResults) accountLookupResults.value = '';
-    const accountSearchList = $('account-search-list');
+    const accountSearchList = $('search-list');
     if (accountSearchList) accountSearchList.innerHTML = '';
     clearFields(ACCOUNT_FIELD_IDS);
     setHidden('account_search_results', true);
@@ -1009,9 +1159,11 @@ function initAdminUI() {
 
     if (btn.classList.contains('admin-edit-schedule')) {
       loadScheduleIntoForm(row, setScheduleFormMode, scheduleCourseLookup);
+      captureScheduleFormSnapshot();
       showMessage(`Loaded schedule ${row.dataset.scheduleId} into the form.`, 'success');
     } else if (btn.classList.contains('admin-edit-account')) {
       loadAccountIntoForm(row, accountForm, accountLookupResults, setAccountFormMode);
+      captureAccountFormSnapshot(accountForm);
       showMessage(`Loaded account ${row.dataset.userId}.`, 'success');
     }
   });
@@ -1029,6 +1181,7 @@ function initAdminUI() {
     try {
       await api.request(`/schedule/${id}`, 'DELETE');
       removeTableRow('schedule', id);
+      clearScheduleFormSnapshot();
       resetScheduleForm();
       showMessage(`Deleted schedule ${id}.`);
     } catch (err) {
@@ -1048,6 +1201,7 @@ function initAdminUI() {
       await api.request(`/accounts/${id}`, 'DELETE');
       removeTutorRelatedRows(id);
       removeTableRow('account', id);
+      clearAccountFormSnapshot();
       resetAccountForm();
       showMessage(`Deleted account ${id}.`);
     } catch (err) {
@@ -1077,8 +1231,8 @@ function initAdminUI() {
 
   // --- Reset buttons ---
 
-  on($('reset-schedule-form'), 'click', resetScheduleForm);
-  on($('reset-account-form'),  'click', resetAccountForm);
+  on($('reset-schedule-form'), 'click', () => { clearScheduleFormSnapshot(); resetScheduleForm(); });
+  on($('reset-account-form'),  'click', () => { clearAccountFormSnapshot();  resetAccountForm();  });
 
   // --- Schedule section ---
 

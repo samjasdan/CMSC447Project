@@ -26,68 +26,6 @@
         return new WP_Error($code, $msg, ["status" => $status]);
     }
 
-    function format_audit_data($fields) {
-        $escaped = array_map(function($v) {
-            if ($v === null) return "NULL";
-            return '"' . str_replace('"', '""', $v) . '"';
-        }, $fields);
-        return implode(",", $escaped);
-    }
-
-    function format_audit_roles($roles) {
-        return implode(",", array_intersect($roles, [TUTOR_ROLE, STAFF_ROLE, ADMIN_ROLE]));
-    }
-
-    function resolve_user_name($user_id) {
-        global $wpdb;
-        return $wpdb->get_var($wpdb->prepare(
-            "SELECT CONCAT(
-                COALESCE(MAX(CASE WHEN meta_key = 'first_name' THEN meta_value END), ''),
-                ' ',
-                COALESCE(MAX(CASE WHEN meta_key = 'last_name'  THEN meta_value END), '')
-            )
-            FROM {$wpdb->usermeta}
-            WHERE user_id = %d
-            AND meta_key IN ('first_name', 'last_name')",
-            $user_id
-        ));
-    }
-
-    function resolve_schedule_audit_fields($course_id, $user_id) {
-        global $wpdb;
-        $course_label = $wpdb->get_var($wpdb->prepare(
-            "SELECT CONCAT(course_subject, ' ', course_code) FROM courses WHERE course_id = %d",
-            $course_id
-        ));
-        return [$course_label, resolve_user_name($user_id)];
-    }
-
-    function resolve_event_audit_fields($event_type_id, $user_id) {
-        global $wpdb;
-        $event_type_name = $wpdb->get_var($wpdb->prepare(
-            "SELECT event_name FROM event_types WHERE event_type_id = %d",
-            $event_type_id
-        ));
-        return [$event_type_name, resolve_user_name($user_id)];
-    }
-
-    function insert_audit_log($action, $table_name, $table_key, $old_data, $new_data) {
-        global $wpdb;
-        $curr_user = wp_get_current_user();
-        return $wpdb->insert(
-            "audit_log",
-            [
-                "user_login" => $curr_user->user_login . ", " . $curr_user->user_firstname . " " . $curr_user->user_lastname,
-                "action"     => $action,
-                "table_name" => $table_name,
-                "table_key"  => $table_key,
-                "old_data"   => $old_data,
-                "new_data"   => $new_data,
-            ],
-            ["%s", "%s", "%s", "%s", "%s", "%s"]
-        ) !== false;
-    }
-
     function validate_positive_int($param, $request, $key) {
         if (!is_numeric($param) || (int) $param <= 0) {
             return new WP_Error(
@@ -343,6 +281,147 @@
         wp_cache_delete(M_SUBJECTS_CACHE_KEY, MANAGEMENT_CACHE_GROUP);
         wp_cache_delete(M_COURSES_CACHE_KEY, MANAGEMENT_CACHE_GROUP);
         wp_cache_delete(M_USERS_CACHE_KEY, MANAGEMENT_CACHE_GROUP);
+    }
+
+
+    function format_audit_data($fields) {
+        $escaped = array_map(function($v) {
+            if ($v === null) return "NULL";
+            return '"' . str_replace('"', '""', $v) . '"';
+        }, $fields);
+        return implode(",", $escaped);
+    }
+
+    function format_audit_role($value) {
+        return str_replace('Asc', 'ASC', snake_to_capital_words($value));
+    }
+
+    function format_audit_roles($roles) {
+        return implode(" | ", array_map(
+            'format_audit_role',
+            array_intersect($roles, [TUTOR_ROLE, STAFF_ROLE, ADMIN_ROLE])
+        ));
+    }
+
+    function resolve_user_name($user_id) {
+        global $wpdb;
+        return $wpdb->get_var($wpdb->prepare(
+            "SELECT CONCAT(
+                COALESCE(MAX(CASE WHEN meta_key = 'first_name' THEN meta_value END), ''),
+                ' ',
+                COALESCE(MAX(CASE WHEN meta_key = 'last_name'  THEN meta_value END), '')
+            )
+            FROM {$wpdb->usermeta}
+            WHERE user_id = %d
+            AND meta_key IN ('first_name', 'last_name')",
+            $user_id
+        ));
+    }
+
+    function resolve_schedule_audit_fields($course_id, $user_id) {
+        global $wpdb;
+        $course_label = $wpdb->get_var($wpdb->prepare(
+            "SELECT CONCAT(course_subject, ' ', course_code) FROM courses WHERE course_id = %d",
+            $course_id
+        ));
+        return [$course_label, resolve_user_name($user_id)];
+    }
+
+    function resolve_event_audit_fields($event_type_id, $user_id) {
+        global $wpdb;
+        $event_type_name = $wpdb->get_var($wpdb->prepare(
+            "SELECT event_name FROM event_types WHERE event_type_id = %d",
+            $event_type_id
+        ));
+        return [$event_type_name, resolve_user_name($user_id)];
+    }
+
+    function insert_audit_log($action, $table_name, $table_key, $old_data, $new_data) {
+        global $wpdb;
+        $curr_user = wp_get_current_user();
+        return $wpdb->insert(
+            "audit_log",
+            [
+                "user_login" => $curr_user->user_login . ", " . $curr_user->user_firstname . " " . $curr_user->user_lastname,
+                "action"     => $action,
+                "table_name" => $table_name,
+                "table_key"  => $table_key,
+                "old_data"   => $old_data,
+                "new_data"   => $new_data,
+            ],
+            ["%s", "%s", "%s", "%s", "%s", "%s"]
+        ) !== false;
+    }
+
+    function parse_audit_csv($csv) {
+        if ($csv === null) return [];
+        $fields = [];
+        $len    = strlen($csv);
+        $i      = 0;
+        while ($i < $len) {
+            if ($csv[$i] === '"') {
+                $i++;
+                $val = "";
+                while ($i < $len) {
+                    if ($csv[$i] === '"' && isset($csv[$i + 1]) && $csv[$i + 1] === '"') {
+                        $val .= '"';
+                        $i  += 2;
+                    } elseif ($csv[$i] === '"') {
+                        $i++;
+                        break;
+                    } else {
+                        $val .= $csv[$i++];
+                    }
+                }
+                $fields[] = $val;
+                if ($i < $len && $csv[$i] === ',') $i++;
+            } else {
+                $start = $i;
+                while ($i < $len && $csv[$i] !== ',') $i++;
+                $raw      = substr($csv, $start, $i - $start);
+                $fields[] = $raw === "NULL" ? null : $raw;
+                if ($i < $len && $csv[$i] === ',') $i++;
+            }
+        }
+        return $fields;
+    }
+
+    function diff_audit_fields($old_fields, $new_fields) {
+        $changes = [];
+        $count   = max(count($old_fields), count($new_fields));
+        for ($i = 0; $i < $count; $i++) {
+            $old = $old_fields[$i] ?? null;
+            $new = $new_fields[$i] ?? null;
+            if ($old === $new) continue;
+            if ($old === null || $new === null) continue;
+            $changes[] = "$old -> $new";
+        }
+        return $changes;
+    }
+
+    function format_log_time($timestamp) {
+        return (new DateTime($timestamp))->format("H:i:s");
+    }
+
+    function format_log_actor($user_login, $requester_roles) {
+        $known_roles = [ADMIN_ROLE => "admin", STAFF_ROLE => "staff"];
+        foreach ($known_roles as $role => $label) {
+            if (in_array($role, $requester_roles, true)) {
+                return "$label ($user_login)";
+            }
+        }
+        return "UNKNOWN ($user_login)";
+    }
+
+    function get_log_actor_roles($user_login_field) {
+        $login = explode(", ", $user_login_field, 2)[0];
+        $user  = get_user_by("login", $login);
+        if (!$user) return [];
+        return array_intersect((array) $user->roles, [TUTOR_ROLE, STAFF_ROLE, ADMIN_ROLE]);
+    }
+
+    function snake_to_capital_words($value) {
+        return implode(" ", array_map("ucfirst", explode("_", $value)));
     }
 }
 //---------------------------------------------------------------------------------------------------------------------
@@ -1068,149 +1147,9 @@
 }
 //---------------------------------------------------------------------------------------------------------------------
 
-// umbc_db Callbacks
-//---------------------------------------------------------------------------------------------------------------------
-{
-    function get_umbc_courses(WP_REST_Request $request) {
-        $search_str = trim((string) $request->get_param("search_str"));
-        $search     = $search_str !== "" ? "%" . $search_str . "%" : "%";
-        $umbcPdo    = db_connect_root("umbc_db");
-
-        try {
-            $stmt = $umbcPdo->prepare("
-                SELECT
-                    c.course_id,
-                    c.course_subject,
-                    s.subject_name,
-                    c.course_code,
-                    c.course_name
-                FROM umbc_courses c
-                JOIN umbc_subjects s
-                    ON c.course_subject = s.subject_code
-                WHERE
-                    c.course_subject LIKE :search
-                    OR s.subject_name LIKE :search
-                    OR c.course_code  LIKE :search
-                    OR c.course_name  LIKE :search
-                ORDER BY c.course_subject, c.course_code
-            ");
-            $stmt->bindValue(":search", $search, PDO::PARAM_STR);
-            $stmt->execute();
-            $umbc_courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return new WP_Error("db_error", "Failed to retrieve courses.", ["status" => 500]);
-        }
-
-        return rest_ensure_response(["success" => true, "umbc_courses" => $umbc_courses]);
-    }
-
-    function get_umbc_accounts(WP_REST_Request $request) {
-        $search_str = trim((string) $request->get_param("search_str"));
-        $search     = $search_str !== "" ? "%" . $search_str . "%" : "%";
-        $umbcPdo    = db_connect_root("umbc_db");
-
-        try {
-            $stmt = $umbcPdo->prepare("
-                SELECT
-                    umbc_id,
-                    first_name,
-                    last_name,
-                    umbc_email
-                FROM umbc_accounts
-                WHERE
-                    umbc_id    LIKE :search
-                    OR first_name LIKE :search
-                    OR last_name  LIKE :search
-                    OR umbc_email LIKE :search
-                ORDER BY last_name, first_name, umbc_id
-            ");
-            $stmt->bindValue(":search", $search, PDO::PARAM_STR);
-            $stmt->execute();
-            $accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("UMBC account search query failed: " . $e->getMessage());
-            return new WP_Error("db_error", "Failed to retrieve accounts.", ["status" => 500]);
-        }
-
-        return rest_ensure_response(["success" => true, "umbc_accounts" => $accounts]);
-    }
-}
-//---------------------------------------------------------------------------------------------------------------------
-
 // Audit Log Callbacks
 //---------------------------------------------------------------------------------------------------------------------
-{
-    function parse_audit_csv($csv) {
-        if ($csv === null) return [];
-        $fields = [];
-        $len    = strlen($csv);
-        $i      = 0;
-        while ($i < $len) {
-            if ($csv[$i] === '"') {
-                $i++;
-                $val = "";
-                while ($i < $len) {
-                    if ($csv[$i] === '"' && isset($csv[$i + 1]) && $csv[$i + 1] === '"') {
-                        $val .= '"';
-                        $i  += 2;
-                    } elseif ($csv[$i] === '"') {
-                        $i++;
-                        break;
-                    } else {
-                        $val .= $csv[$i++];
-                    }
-                }
-                $fields[] = $val;
-                if ($i < $len && $csv[$i] === ',') $i++;
-            } else {
-                $start = $i;
-                while ($i < $len && $csv[$i] !== ',') $i++;
-                $raw      = substr($csv, $start, $i - $start);
-                $fields[] = $raw === "NULL" ? null : $raw;
-                if ($i < $len && $csv[$i] === ',') $i++;
-            }
-        }
-        return $fields;
-    }
-
-    function diff_audit_fields($old_fields, $new_fields) {
-        $changes = [];
-        $count   = max(count($old_fields), count($new_fields));
-        for ($i = 0; $i < $count; $i++) {
-            $old = $old_fields[$i] ?? null;
-            $new = $new_fields[$i] ?? null;
-            if ($old === $new) continue;
-            if ($old === null || $new === null) continue;
-            $changes[] = "$old -> $new";
-        }
-        return $changes;
-    }
-
-    function format_log_time($timestamp) {
-        return (new DateTime($timestamp))->format("H:i:s");
-    }
-
-    function format_log_actor($user_login, $requester_roles) {
-        $known_roles = [ADMIN_ROLE => "admin", STAFF_ROLE => "staff"];
-        foreach ($known_roles as $role => $label) {
-            if (in_array($role, $requester_roles, true)) {
-                return "$label ($user_login)";
-            }
-        }
-        return "UNKNOWN ($user_login)";
-    }
-
-    function get_log_actor_roles($user_login_field) {
-        $login = explode(", ", $user_login_field, 2)[0];
-        $user  = get_user_by("login", $login);
-        if (!$user) return [];
-        return array_intersect((array) $user->roles, [TUTOR_ROLE, STAFF_ROLE, ADMIN_ROLE]);
-    }
-
-    function snake_to_capital_words($value) {
-        return implode(" ", array_map("ucfirst", explode("_", $value)));
-    }
-
+{    
     function format_log_entry($row) {
         $time      = format_log_time($row["time_stamp"]);
         $roles     = get_log_actor_roles($row["user_login"]);
@@ -1287,6 +1226,75 @@
         $entries = array_map("format_log_entry", $rows);
 
         return rest_ensure_response(["success" => true, "logs" => $entries]);
+    }
+}
+//---------------------------------------------------------------------------------------------------------------------
+
+// umbc_db Callbacks
+//---------------------------------------------------------------------------------------------------------------------
+{
+    function get_umbc_courses(WP_REST_Request $request) {
+        $search_str = trim((string) $request->get_param("search_str"));
+        $search     = $search_str !== "" ? "%" . $search_str . "%" : "%";
+        $umbcPdo    = db_connect_root("umbc_db");
+
+        try {
+            $stmt = $umbcPdo->prepare("
+                SELECT
+                    c.course_id,
+                    c.course_subject,
+                    s.subject_name,
+                    c.course_code,
+                    c.course_name
+                FROM umbc_courses c
+                JOIN umbc_subjects s
+                    ON c.course_subject = s.subject_code
+                WHERE
+                    c.course_subject LIKE :search
+                    OR s.subject_name LIKE :search
+                    OR c.course_code  LIKE :search
+                    OR c.course_name  LIKE :search
+                ORDER BY c.course_subject, c.course_code
+            ");
+            $stmt->bindValue(":search", $search, PDO::PARAM_STR);
+            $stmt->execute();
+            $umbc_courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return new WP_Error("db_error", "Failed to retrieve courses.", ["status" => 500]);
+        }
+
+        return rest_ensure_response(["success" => true, "umbc_courses" => $umbc_courses]);
+    }
+
+    function get_umbc_accounts(WP_REST_Request $request) {
+        $search_str = trim((string) $request->get_param("search_str"));
+        $search     = $search_str !== "" ? "%" . $search_str . "%" : "%";
+        $umbcPdo    = db_connect_root("umbc_db");
+
+        try {
+            $stmt = $umbcPdo->prepare("
+                SELECT
+                    umbc_id,
+                    first_name,
+                    last_name,
+                    umbc_email
+                FROM umbc_accounts
+                WHERE
+                    umbc_id    LIKE :search
+                    OR first_name LIKE :search
+                    OR last_name  LIKE :search
+                    OR umbc_email LIKE :search
+                ORDER BY last_name, first_name, umbc_id
+            ");
+            $stmt->bindValue(":search", $search, PDO::PARAM_STR);
+            $stmt->execute();
+            $accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("UMBC account search query failed: " . $e->getMessage());
+            return new WP_Error("db_error", "Failed to retrieve accounts.", ["status" => 500]);
+        }
+
+        return rest_ensure_response(["success" => true, "umbc_accounts" => $accounts]);
     }
 }
 //---------------------------------------------------------------------------------------------------------------------

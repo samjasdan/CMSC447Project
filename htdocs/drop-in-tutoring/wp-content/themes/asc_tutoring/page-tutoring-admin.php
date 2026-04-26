@@ -58,7 +58,7 @@ foreach ($eventTypes as $eventType) {
                 <div class="admin-grid">
                   <div>
                     <label for="event_user_id"><strong>Tutor</strong></label>
-                    <select id="event_user_id" name="user_id" required>
+                    <select id="event_user_id" name="user_id">
                       <option value="">Select tutor</option>
                       <?php foreach ($users as $user) : ?>
                         <?php if (in_array('tutor', (array) $user['roles'], true)) : ?>
@@ -71,7 +71,7 @@ foreach ($eventTypes as $eventType) {
                   </div>
                   <div>
                     <label for="event_type"><strong>Event Type</strong></label>
-                    <select id="event_type" name="event_type" required>
+                    <select id="event_type" name="event_type">
                       <option value="">Select type</option>
                       <?php foreach ($eventTypes as $eventType) : ?>
                         <option value="<?php echo esc_attr($eventType['event_type_id']); ?>">
@@ -83,10 +83,10 @@ foreach ($eventTypes as $eventType) {
                   <div id="date-range-fields">
                     <div>
                       <label for="start_day"><strong>Start Date</strong></label>
-                      <input type="date" id="start_day" name="start_day" required />
+                      <input type="date" id="start_day" name="start_day" />
                     </div>
                     <div>
-                      <label for="final_day"><strong>Final Date</strong></label>
+                      <label for="final_day"><strong>End Date</strong></label>
                       <input type="date" id="final_day" name="final_day" />
                     </div>
                   </div>
@@ -103,14 +103,34 @@ foreach ($eventTypes as $eventType) {
               </form>
             </section>
             <div class="umbc-table-wrapper">
+              <div class="admin-table-filter" data-table-id="event-table">
+                <div class="admin-table-filter-row">
+                  <label class="admin-table-filter-label"><strong>Filter by</strong></label>
+                  <select class="admin-table-filter-column-select" aria-label="Select filter column for event-table">
+                    <option value=""></option>
+                    <option value="0">Tutor</option>
+                    <option value="1">Type</option>
+                    <option value="2">Start Date</option>
+                    <option value="3">End Date</option>
+                    <option value="4">Time</option>
+                  </select>
+                  <div class="admin-table-filter-search-wrap">
+                    <select class="admin-table-filter-search-select" aria-label="Filter search for event-table" disabled>
+                      <option value=""></option>
+                    </select>
+                  </div>
+                  <button type="button" class="button button-primary admin-table-filter-search">Search</button>
+                  <button type="button" class="button button-secondary admin-table-filter-clear">Clear</button>
+                </div>
+              </div>
               <table class="umbc-table admin-table" id="event-table">
                 <thead>
                   <tr>
-                    <th>Tutor</th>
-                    <th>Type</th>
-                    <th>Starting Day</th>
-                    <th>Final Day</th>
-                    <th>Time</th>
+                    <th>Tutor<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                    <th>Type<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                    <th>Start Date<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                    <th>End Date<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                    <th>Time<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -157,7 +177,7 @@ foreach ($eventTypes as $eventType) {
                   <div class="admin-grid">
                     <div>
                       <label for="schedule_user_id"><strong>Tutor</strong></label>
-                      <select id="schedule_user_id" name="user_id" required >
+                      <select id="schedule_user_id" name="user_id">
                         <option value="">Select tutor</option>
                         <?php foreach ($users as $user) : ?>
                           <?php if (in_array('tutor', (array) $user['roles'], true)) : ?>
@@ -170,7 +190,7 @@ foreach ($eventTypes as $eventType) {
                     </div>
                     <div>
                       <label for="schedule_course_lookup"><strong>Select Course</strong></label>
-                      <select id="schedule_course_lookup" name="schedule_course_lookup" required >
+                      <select id="schedule_course_lookup" name="schedule_course_lookup">
                         <option value="">Select a course</option>
                         <?php foreach ($mCourses as $course) : ?>
                           <option value="<?php echo esc_attr(json_encode($course)); ?>">
@@ -181,7 +201,7 @@ foreach ($eventTypes as $eventType) {
                     </div>
                     <div>
                       <label for="schedule_day_of_week"><strong>Day</strong></label>
-                      <select id="schedule_day_of_week" name="day_of_week" required>
+                      <select id="schedule_day_of_week" name="day_of_week">
                         <option value="">Select day</option>
                         <option value="Monday">Monday</option>
                         <option value="Tuesday">Tuesday</option>
@@ -198,20 +218,20 @@ foreach ($eventTypes as $eventType) {
                       <label for="schedule_end_time_picker"><strong>End Time</strong></label>
                       <input type="text" id="schedule_end_time_picker" placeholder="Select time" autocomplete="off" />
                     </div>
-                    <input type="hidden" id="schedule_course_id" name="course_id" required />
+                    <input type="hidden" id="schedule_course_id" name="course_id" />
                   </div>
                   <details class="admin-details">
                     <summary><strong>New course</strong> (Search for courses not currently scheduled)</summary>
                     <div class="admin-grid">
-                      <div class="account-search-wrapper">
+                      <div class="search-wrapper">
                         <label for="course_search_query"><strong>Search Course</strong></label>
-                        <div class="account-search-row">
+                        <div class="search-row">
                           <input type="text" id="course_search_query" name="course_search_query" placeholder="Search by subject, code, or name" autocomplete="off" />
                           <button type="button" class="button button-primary" id="course-search-submit">Search</button>
                         </div>
-                        <div id="course_search_results" class="account-search-results" hidden>
-                          <p class="account-search-status" id="course-search-status"></p>
-                          <ul class="account-search-list" id="course-search-list"></ul>
+                        <div id="course_search_results" class="search-results" hidden>
+                          <p class="search-status" id="course-search-status"></p>
+                          <ul class="search-list" id="course-search-list"></ul>
                         </div>
                         <input type="hidden" id="course_lookup_results" name="course_lookup_results" />
                       </div>
@@ -225,14 +245,34 @@ foreach ($eventTypes as $eventType) {
                 </form>
               </section>
               <div class="umbc-table-wrapper">
+                <div class="admin-table-filter" data-table-id="schedule-table">
+                  <div class="admin-table-filter-row">
+                    <label class="admin-table-filter-label"><strong>Filter by</strong></label>
+                    <select class="admin-table-filter-column-select" aria-label="Select filter column for schedule-table">
+                      <option value=""></option>
+                      <option value="0">Tutor</option>
+                      <option value="1">Course</option>
+                      <option value="2">Day</option>
+                      <option value="3">Start Time</option>
+                      <option value="4">End Time</option>
+                    </select>
+                    <div class="admin-table-filter-search-wrap">
+                      <select class="admin-table-filter-search-select" aria-label="Filter search for schedule-table" disabled>
+                        <option value=""></option>
+                      </select>
+                    </div>
+                    <button type="button" class="button button-primary admin-table-filter-search">Search</button>
+                    <button type="button" class="button button-secondary admin-table-filter-clear">Clear</button>
+                  </div>
+                </div>
                 <table class="umbc-table admin-table" id="schedule-table">
                   <thead>
                     <tr>
-                      <th>Tutor</th>
-                      <th>Course</th>
-                      <th>Day</th>
-                      <th>Start Time</th>
-                      <th>End Time</th>
+                      <th>Tutor<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Course<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Day<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Start Time<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>End Time<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -280,15 +320,15 @@ foreach ($eventTypes as $eventType) {
                 <form class="tutoring-admin-form" id="account-form">
                   <input type="hidden" id="account_user_id" name="user_id" />
                   <div class="admin-grid">
-                    <div class="account-search-wrapper">
+                    <div class="search-wrapper">
                       <label for="account_search_query"><strong>Search UMBC Account</strong></label>
-                      <div class="account-search-row">
+                      <div class="search-row">
                         <input type="text" id="account_search_query" name="account_search_query" placeholder="Search by name, ID, or email" autocomplete="off" />
-                        <button type="button" class="button button-primary" id="account-search-submit">Search</button>
+                        <button type="button" class="button button-primary" id="search-submit">Search</button>
                       </div>
-                      <div id="account_search_results" class="account-search-results" hidden>
-                        <p class="account-search-status" id="account-search-status"></p>
-                        <ul class="account-search-list" id="account-search-list"></ul>
+                      <div id="account_search_results" class="search-results" hidden>
+                        <p class="search-status" id="search-status"></p>
+                        <ul class="search-list" id="search-list"></ul>
                       </div>
                       <input type="hidden" id="account_lookup_results" name="account_lookup_results" />
                     </div>
@@ -327,13 +367,32 @@ foreach ($eventTypes as $eventType) {
                 </form>
               </section>
               <div class="umbc-table-wrapper">
+                <div class="admin-table-filter" data-table-id="account-table">
+                  <div class="admin-table-filter-row">
+                    <label class="admin-table-filter-label"><strong>Filter by</strong></label>
+                    <select class="admin-table-filter-column-select" aria-label="Select filter column for account-table">
+                      <option value=""></option>
+                      <option value="0">UMBC ID</option>
+                      <option value="1">Name</option>
+                      <option value="2">Email</option>
+                      <option value="3">Role</option>
+                    </select>
+                    <div class="admin-table-filter-search-wrap">
+                      <select class="admin-table-filter-search-select" aria-label="Filter search for account-table" disabled>
+                        <option value=""></option>
+                      </select>
+                    </div>
+                    <button type="button" class="button button-primary admin-table-filter-search">Search</button>
+                    <button type="button" class="button button-secondary admin-table-filter-clear">Clear</button>
+                  </div>
+                </div>
                 <table class="umbc-table admin-table" id="account-table">
                   <thead>
                     <tr>
-                      <th>UMBC ID</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
+                      <th>UMBC ID<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Name<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Email<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Role<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -368,11 +427,11 @@ foreach ($eventTypes as $eventType) {
               <section class="admin-subsection" id="import-upload-section">
                 <h3>Import CSV</h3>
                 <p>Upload a formatted CSV to replace all subjects, courses, tutors, and schedule entries. The file will be validated before any changes are made.</p>
-                <div class="admin-actions" style="margin-top: 0;">
-                  <a href="#" class="button button-secondary" id="import-download-template">&#8595; Download Template</a>
-                  <a href="#" class="button button-secondary" id="import-export-db">&#8595; Export Current Database</a>
+                <div class="admin-actions">
+                  <a class="button button-primary" id="import-export-db">&#8595; Export Schedule</a>
+                  <a class="button button-secondary" id="import-download-template">&#8595; Download CSV Template</a>
                 </div>
-                <form class="tutoring-admin-form" id="import-form" style="margin-top: 1rem;">
+                <form class="tutoring-admin-form" id="import-form">
                   <div class="admin-grid">
                     <div>
                       <label for="csv_file"><strong>Select CSV File</strong></label>
@@ -384,7 +443,7 @@ foreach ($eventTypes as $eventType) {
                     <span class="tutoring-admin-message" id="import-message" hidden></span>
                   </div>
                 </form>
-                <div id="import-result-panel" hidden style="margin-top: 1rem;">
+                <div id="import-result-panel" hidden>
                   <div id="import-error-panel" hidden>
                     <h4 style="margin-bottom: 0.5rem; color: #b71c1c;">&#10007; Validation Failed</h4>
                     <div class="logs-box" id="import-error-box" role="log" aria-label="Import validation errors"></div>
@@ -392,7 +451,7 @@ foreach ($eventTypes as $eventType) {
                   <div id="import-success-panel" hidden>
                     <h4 style="margin-bottom: 0.5rem; color: #1b5e20;">&#10003; Validation Passed — Review &amp; Confirm</h4>
                     <div class="logs-box" id="import-preview-box" role="log" aria-label="Import preview"></div>
-                    <div class="admin-actions" style="margin-top: 1rem; align-items: center;">
+                    <div class="admin-actions">
                       <button type="button" class="button button-primary" id="import-confirm-btn">Confirm Import</button>
                       <button type="button" class="button button-secondary" id="import-cancel-btn">Cancel</button>
                     </div>
@@ -400,17 +459,36 @@ foreach ($eventTypes as $eventType) {
                 </div>
               </section>
 
-              <section class="admin-subsection" style="margin-top: 1rem;">
+              <section class="admin-subsection"">
                 <h3>Delete Schedule Entries by Course</h3>
-                <p>Select a course below and delete all associated schedule entries. This action cannot be undone.</p>
+                <p>Select a course below to delete it and all associated schedule entries.</p>
                 <div class="umbc-table-wrapper">
+                  <div class="admin-table-filter" data-table-id="import-course-table">
+                    <div class="admin-table-filter-row">
+                      <label class="admin-table-filter-label"><strong>Filter by</strong></label>
+                      <select class="admin-table-filter-column-select" aria-label="Select filter column for import-course-table">
+                        <option value=""></option>
+                        <option value="0">Subject</option>
+                        <option value="1">Course ID</option>
+                        <option value="2">Course Name</option>
+                        <option value="3">Times Offered</option>
+                      </select>
+                      <div class="admin-table-filter-search-wrap">
+                        <select class="admin-table-filter-search-select" aria-label="Filter search for import-course-table" disabled>
+                          <option value=""></option>
+                        </select>
+                      </div>
+                      <button type="button" class="button button-primary admin-table-filter-search">Search</button>
+                      <button type="button" class="button button-secondary admin-table-filter-clear">Clear</button>
+                    </div>
+                  </div>
                   <table class="umbc-table admin-table" id="import-course-table">
                     <thead>
                       <tr>
-                        <th>Subject</th>
-                        <th>Course ID</th>
-                        <th>Course Name</th>
-                        <th>Times Offered</th>
+                        <th>Subject<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Course ID<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Course Name<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Times Offered<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -420,7 +498,7 @@ foreach ($eventTypes as $eventType) {
                           <td><?php echo esc_html($course['course_subject']); ?></td>
                           <td><?php echo esc_html($course['course_subject'] . ' ' . $course['course_code']); ?></td>
                           <td><?php echo esc_html($course['course_name']); ?></td>
-                          <td><?php echo esc_html($course['times_offered'] ?? '--'); ?></td>
+                          <td><?php echo esc_html($course['course_count'] ?? '--'); ?></td>
                           <td>
                             <button type="button" class="button button-secondary admin-delete-course-schedule">Delete</button>
                           </td>
