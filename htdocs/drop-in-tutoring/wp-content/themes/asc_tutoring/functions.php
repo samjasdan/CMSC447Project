@@ -59,6 +59,14 @@ add_action('wp_enqueue_scripts', function() {
         true
     );
 
+    wp_enqueue_style( 
+        'umbc-style', 
+        get_template_directory_uri() . '/css/umbc-style.css', 
+        false, 
+        '1.0', 
+        'all'
+    );
+
     // --- Drop-In Tutoring page ---
 
     if ($is_tutoring) {
@@ -68,6 +76,13 @@ add_action('wp_enqueue_scripts', function() {
             ['shared'],
             '1.0',
             true
+        );
+        wp_enqueue_style( 
+            'drop-in-tutoring-style', 
+            get_template_directory_uri() . '/css/drop-in-tutoring-style.css', 
+            false, 
+            '1.0', 
+            'all'
         );
         return;
     }
@@ -108,10 +123,6 @@ add_action('wp_enqueue_scripts', function() {
         '1.0',
         true
     );
-    wp_localize_script('asc-staff', 'wpApiSettings', [
-        'nonce' => wp_create_nonce('wp_rest'),
-        'root'  => esc_url_raw(rest_url()),
-    ]);
 
     if (current_user_can('admin_control')) {
         wp_enqueue_script(
@@ -122,6 +133,19 @@ add_action('wp_enqueue_scripts', function() {
             true
         );
     }
+
+    wp_enqueue_style( 
+        'tutoring-admin-style', 
+        get_template_directory_uri() . '/css/tutoring-admin-style.css', 
+        false, 
+        '1.0', 
+        'all'
+    );
+
+    wp_localize_script('asc-staff', 'wpApiSettings', [
+        'nonce' => wp_create_nonce('wp_rest'),
+        'root'  => esc_url_raw(rest_url()),
+    ]);
 });
 
 add_action("after_setup_theme", function() {
