@@ -622,6 +622,23 @@
             "args"                => array_merge(["user_id" => $numeric_id], $account_write_args),
         ]);
     });
+    
+    //Course schedule REST API
+    add_action("rest_api_init", function() {
+
+        $numeric_id = [
+            "required"          => true,
+            "validate_callback" => "validate_positive_int",
+            "sanitize_callback" => "absint",
+        ];
+    
+        register_rest_route("asc-tutoring/v1", "/course-schedule/(?P<course_id>\d+)", [
+            "methods"             => "DELETE",
+            "callback"            => "delete_schedule_by_course",
+            "permission_callback" => function() { return current_user_can("admin_control"); },
+            "args"                => ["course_id" => $numeric_id],
+        ]);
+    });
 
     // Audit Log REST API
     add_action("rest_api_init", function() {
@@ -848,6 +865,50 @@
         invalidate_schedule_cache();
 
         return rest_ensure_response(["updated" => true, "schedule_id" => $schedule_id]);
+    }
+
+    function delete_schedule_by_course(WP_REST_Request $request) {
+        global $wpdb;
+    
+        $course_id = $request->get_param("course_id");
+    
+        $course = $wpdb->get_row($wpdb->prepare(
+            "SELECT course_id, course_subject, course_code, course_name FROM courses WHERE course_id = %d",
+            $course_id
+        ), ARRAY_A);
+    
+        if (!$course) {
+            return new WP_Error("not_found", "No course found with that ID", ["status" => 404]);
+        }
+    
+        $course_label = $course["course_subject"] . " " . $course["course_code"];
+    
+        $wpdb->query("START TRANSACTION");
+    
+        $result = $wpdb->delete("schedule", ["course_id" => $course_id], ["%d"]);
+        if ($result === false) return rollback_error("db_error", "Failed to delete schedule entries for course");
+    
+        $result = $wpdb->delete("courses", ["course_id" => $course_id], ["%d"]);
+        if ($result === false) return rollback_error("db_error", "Failed to delete course");
+    
+        $result = $wpdb->query($wpdb->prepare(
+            "UPDATE subjects SET subject_count = subject_count - 1 WHERE subject_code = %s",
+            $course["course_subject"]
+        ));
+        if ($result === false) return rollback_error("db_error", "Failed to update subject count");
+    
+        $logged = insert_audit_log("DEL", "courses", $course_id,
+            format_audit_data([$course_label, $course["course_name"]]),
+            null);
+        if (!$logged) return rollback_error("db_error", "Failed to write audit log");
+    
+        $wpdb->query("COMMIT");
+    
+        wp_cache_delete(M_SUBJECTS_CACHE_KEY, MANAGEMENT_CACHE_GROUP);
+        wp_cache_delete(M_COURSES_CACHE_KEY, MANAGEMENT_CACHE_GROUP);
+        invalidate_schedule_cache();
+    
+        return rest_ensure_response(["deleted" => true, "course_id" => $course_id]);
     }
 }
 //---------------------------------------------------------------------------------------------------------------------
