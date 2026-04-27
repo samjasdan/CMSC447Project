@@ -132,46 +132,48 @@ foreach ($eventTypes as $eventType) {
                   </div>
                 </div>
               </div>
-              <table class="umbc-table admin-table" id="event-table">
-                <thead>
-                  <tr>
-                    <th>Tutor<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                    <th>Type<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                    <th>Start Date<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                    <th>End Date<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                    <th>Time<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php foreach ($mEvents as $event) : ?>
-                    <?php $event_user = $users_by_id[$event['user_id']] ?? null; ?>
-                    <?php $event_type = $event_types_by_id[$event['event_type']] ?? null; ?>
-                    <tr
-                      data-event-id="<?php echo esc_attr($event['event_id']); ?>"
-                      data-user-id="<?php echo esc_attr($event['user_id']); ?>"
-                      data-event-type="<?php echo esc_attr($event['event_type']); ?>"
-                      data-start-day="<?php echo esc_attr($event['start_day']); ?>"
-                      data-final-day="<?php echo esc_attr($event['final_day'] ?? ''); ?>"
-                      data-leaving-time="<?php echo esc_attr($event['leaving_time'] ?? ''); ?>"
-                    >
-                      <td><?php echo esc_html($event_user ? tutoring_admin_user_label($event_user) : $event['user_id']); ?></td>
-                      <td><?php echo esc_html(display_snake_case($event_type['event_name'] ?? $event['event_type'])); ?></td>
-                      <td>
-                        <?php echo esc_html(date('m-d-Y', strtotime($event['start_day']))); ?>
-                      </td>
-                      <td>
-                        <?php echo esc_html($event['final_day'] ? date('m-d-Y', strtotime($event['final_day'])) : '--'); ?>
-                      </td>
-                      <td><?php echo esc_html($event['leaving_time'] !== null ? tutoring_admin_time_label($event['leaving_time']) : '--'); ?></td>
-                      <td>
-                        <button type="button" class="button button-primary admin-edit-event">Edit</button>
-                        <button type="button" class="button button-secondary admin-delete-event">Delete</button>
-                      </td>
+              <div class="umbc-table-scroll">
+                <table class="umbc-table admin-table" id="event-table">
+                  <thead>
+                    <tr>
+                      <th>Tutor<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Type<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Start Date<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>End Date<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Time<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                      <th>Actions</th>
                     </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($mEvents as $event) : ?>
+                      <?php $event_user = $users_by_id[$event['user_id']] ?? null; ?>
+                      <?php $event_type = $event_types_by_id[$event['event_type']] ?? null; ?>
+                      <tr
+                        data-event-id="<?php echo esc_attr($event['event_id']); ?>"
+                        data-user-id="<?php echo esc_attr($event['user_id']); ?>"
+                        data-event-type="<?php echo esc_attr($event['event_type']); ?>"
+                        data-start-day="<?php echo esc_attr($event['start_day']); ?>"
+                        data-final-day="<?php echo esc_attr($event['final_day'] ?? ''); ?>"
+                        data-leaving-time="<?php echo esc_attr($event['leaving_time'] ?? ''); ?>"
+                      >
+                        <td><?php echo esc_html($event_user ? tutoring_admin_user_label($event_user) : $event['user_id']); ?></td>
+                        <td><?php echo esc_html(display_snake_case($event_type['event_name'] ?? $event['event_type'])); ?></td>
+                        <td>
+                          <?php echo esc_html(date('m-d-Y', strtotime($event['start_day']))); ?>
+                        </td>
+                        <td>
+                          <?php echo esc_html($event['final_day'] ? date('m-d-Y', strtotime($event['final_day'])) : '--'); ?>
+                        </td>
+                        <td><?php echo esc_html($event['leaving_time'] !== null ? tutoring_admin_time_label($event['leaving_time']) : '--'); ?></td>
+                        <td>
+                          <button type="button" class="button button-primary admin-edit-event">Edit</button>
+                          <button type="button" class="button button-secondary admin-delete-event">Delete</button>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
           
@@ -283,50 +285,52 @@ foreach ($eventTypes as $eventType) {
                     </div>
                   </div>
                 </div>
-                <table class="umbc-table admin-table" id="schedule-table">
-                  <thead>
-                    <tr>
-                      <th>Tutor<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                      <th>Course<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                      <th>Day<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                      <th>Start Time<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                      <th>End Time<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php foreach ($mSchedule as $row) : ?>
-                      <?php $schedule_user = $users_by_id[$row['user_id']] ?? null; ?>
-                      <?php $schedule_course = $mCourses[$row['course_id']] ?? null; ?>
-                      <tr
-                        data-schedule-id="<?php echo esc_attr($row['schedule_id']); ?>"
-                        data-user-id="<?php echo esc_attr($row['user_id']); ?>"
-                        data-course-id="<?php echo esc_attr($row['course_id']); ?>"
-                        data-day-of-week="<?php echo esc_attr($row['day_of_week']); ?>"
-                        data-start-time="<?php echo esc_attr($row['start_time']); ?>"
-                        data-end-time="<?php echo esc_attr($row['end_time']); ?>"
-                      >
-                        <td><?php echo esc_html($schedule_user ? tutoring_admin_user_label($schedule_user) : $row['user_id']); ?></td>
-                        <td>
-                          <?php
-                          echo esc_html(
-                            $schedule_course
-                              ? trim($schedule_course['course_subject'] . ' ' . $schedule_course['course_code'] . ' - ' . $schedule_course['course_name'])
-                              : $row['course_id']
-                          );
-                          ?>
-                        </td>
-                        <td><?php echo esc_html(tutoring_day_label($row['day_of_week'])); ?></td>
-                        <td><?php echo esc_html(tutoring_admin_time_label($row['start_time'])); ?></td>
-                        <td><?php echo esc_html(tutoring_admin_time_label($row['end_time'])); ?></td>
-                        <td>
-                          <button type="button" class="button button-primary admin-edit-schedule">Edit</button>
-                          <button type="button" class="button button-secondary admin-delete-schedule">Delete</button>
-                        </td>
+                <div class="umbc-table-scroll">
+                  <table class="umbc-table admin-table" id="schedule-table">
+                    <thead>
+                      <tr>
+                        <th>Tutor<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Course<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Day<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Start Time<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>End Time<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Actions</th>
                       </tr>
-                    <?php endforeach; ?>
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      <?php foreach ($mSchedule as $row) : ?>
+                        <?php $schedule_user = $users_by_id[$row['user_id']] ?? null; ?>
+                        <?php $schedule_course = $mCourses[$row['course_id']] ?? null; ?>
+                        <tr
+                          data-schedule-id="<?php echo esc_attr($row['schedule_id']); ?>"
+                          data-user-id="<?php echo esc_attr($row['user_id']); ?>"
+                          data-course-id="<?php echo esc_attr($row['course_id']); ?>"
+                          data-day-of-week="<?php echo esc_attr($row['day_of_week']); ?>"
+                          data-start-time="<?php echo esc_attr($row['start_time']); ?>"
+                          data-end-time="<?php echo esc_attr($row['end_time']); ?>"
+                        >
+                          <td><?php echo esc_html($schedule_user ? tutoring_admin_user_label($schedule_user) : $row['user_id']); ?></td>
+                          <td>
+                            <?php
+                            echo esc_html(
+                              $schedule_course
+                                ? trim($schedule_course['course_subject'] . ' ' . $schedule_course['course_code'] . ' - ' . $schedule_course['course_name'])
+                                : $row['course_id']
+                            );
+                            ?>
+                          </td>
+                          <td><?php echo esc_html(tutoring_day_label($row['day_of_week'])); ?></td>
+                          <td><?php echo esc_html(tutoring_admin_time_label($row['start_time'])); ?></td>
+                          <td><?php echo esc_html(tutoring_admin_time_label($row['end_time'])); ?></td>
+                          <td>
+                            <button type="button" class="button button-primary admin-edit-schedule">Edit</button>
+                            <button type="button" class="button button-secondary admin-delete-schedule">Delete</button>
+                          </td>
+                        </tr>
+                      <?php endforeach; ?>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </section>
 
@@ -413,38 +417,40 @@ foreach ($eventTypes as $eventType) {
                     </div>
                   </div>
                 </div>
-                <table class="umbc-table admin-table" id="account-table">
-                  <thead>
-                    <tr>
-                      <th>UMBC ID<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                      <th>Name<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                      <th>Email<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                      <th>Role<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php foreach ($users as $user) : ?>
-                      <tr
-                        data-user-id="<?php echo esc_attr($user['user_id']); ?>"
-                        data-user-login="<?php echo esc_attr($user['user_login']); ?>"
-                        data-user-email="<?php echo esc_attr($user['user_email']); ?>"
-                        data-first-name="<?php echo esc_attr($user['first_name']); ?>"
-                        data-last-name="<?php echo esc_attr($user['last_name']); ?>"
-                        data-roles="<?php echo esc_attr(implode(',', $user['roles'] ?? [])); ?>"
-                      >
-                        <td><?php echo esc_html($user['user_login']); ?></td>
-                        <td><?php echo esc_html(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?></td>
-                        <td><?php echo esc_html($user['user_email']); ?></td>
-                        <td><?php echo esc_html(display_roles($user['roles'])); ?></td>
-                        <td>
-                          <button type="button" class="button button-primary admin-edit-account">Edit</button>
-                          <button type="button" class="button button-secondary admin-delete-account">Delete</button>
-                        </td>
+                <div class="umbc-table-scroll">
+                  <table class="umbc-table admin-table" id="account-table">
+                    <thead>
+                      <tr>
+                        <th>UMBC ID<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Name<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Email<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Role<span class="table-sort-arrows"><button type="button" class="sort-up" aria-label="Sort ascending">▲</button><button type="button" class="sort-down" aria-label="Sort descending">▼</button></span></th>
+                        <th>Actions</th>
                       </tr>
-                    <?php endforeach; ?>
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      <?php foreach ($users as $user) : ?>
+                        <tr
+                          data-user-id="<?php echo esc_attr($user['user_id']); ?>"
+                          data-user-login="<?php echo esc_attr($user['user_login']); ?>"
+                          data-user-email="<?php echo esc_attr($user['user_email']); ?>"
+                          data-first-name="<?php echo esc_attr($user['first_name']); ?>"
+                          data-last-name="<?php echo esc_attr($user['last_name']); ?>"
+                          data-roles="<?php echo esc_attr(implode(',', $user['roles'] ?? [])); ?>"
+                        >
+                          <td><?php echo esc_html($user['user_login']); ?></td>
+                          <td><?php echo esc_html(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))); ?></td>
+                          <td><?php echo esc_html($user['user_email']); ?></td>
+                          <td><?php echo esc_html(display_roles($user['roles'])); ?></td>
+                          <td>
+                            <button type="button" class="button button-primary admin-edit-account">Edit</button>
+                            <button type="button" class="button button-secondary admin-delete-account">Delete</button>
+                          </td>
+                        </tr>
+                      <?php endforeach; ?>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </section>
             
@@ -598,8 +604,10 @@ foreach ($eventTypes as $eventType) {
                     </div>
                   </div>
                 </div>
-                <div class="logs-box" id="logs-box" role="log" aria-live="polite" aria-label="Audit log entries">
-                  <p class="logs-empty" id="logs-empty">No log entries for this day.</p>
+                <div class="umbc-table-scroll">
+                  <div class="logs-box" id="logs-box" role="log" aria-live="polite" aria-label="Audit log entries">
+                    <p class="logs-empty" id="logs-empty">No log entries for this day.</p>
+                  </div>
                 </div>
               </div>
             </section>

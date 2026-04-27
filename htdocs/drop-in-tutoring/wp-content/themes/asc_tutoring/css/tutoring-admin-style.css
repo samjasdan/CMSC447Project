@@ -64,6 +64,10 @@ input:disabled {
   width: 100%;
 }
 
+#import-form {
+  margin-top: 12px;
+}
+
 .admin-role-box {
   display: flex;
   align-items: center;
@@ -109,6 +113,10 @@ input[type="date" i]:focus-visible {
   overflow: visible;
 }
 
+.umbc-table-scroll {
+  overflow-x: auto;
+}
+
 .entry-content .admin-table td:last-child,
 .entry-content .umbc-table thead th:last-child {
   width: 1%;
@@ -116,8 +124,7 @@ input[type="date" i]:focus-visible {
   text-align: center;
 }
 
-#event-table td:nth-child(3),
-#event-table td:nth-child(4),
+#event-table td:nth-child(2),
 #schedule-table td:nth-child(4),
 #schedule-table td:nth-child(5) {
   white-space: nowrap;
@@ -364,6 +371,21 @@ input[readonly] {
   background-size: 1rem .8rem;
   cursor: pointer;
   box-sizing: border-box;
+}
+
+.flatpickr-mobile {
+  height: 32.39px;
+  background-color: #fff;
+  border: 1px solid #737373;
+  border-radius: .25rem;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: block;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right .5rem center;
+  background-size: 1rem .8rem;
+  cursor: pointer;
 }
 
 .flatpickr-input:focus {
