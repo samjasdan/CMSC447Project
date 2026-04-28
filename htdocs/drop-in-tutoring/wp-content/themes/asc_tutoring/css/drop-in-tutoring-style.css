@@ -40,3 +40,73 @@
 .subject-filter-button.active {
   outline: 2px solid #000;
 }
+
+.day-filter-strip {
+  margin-top: 16px;
+  margin-bottom: 20px;
+}
+
+.day-filter-label {
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 10px;
+}
+
+.day-filter-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.day-filter-tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 130px;
+  justify-content: center;
+}
+
+.day-filter-check {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #000;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.day-filter-tile.active {
+  opacity: 1;
+}
+
+.day-filter-tile:not(.active) .day-filter-check {
+  color: transparent;
+  border-color: #888;
+  background: #f5f5f5;
+}
+
+.day-filter-tile:not(.active) {
+  background-color: #e8e8e8;
+  color: #666;
+}
+
+.day-filter-tile:not(.active):hover {
+  background-color: #d5d5d5;
+}
+
+.tutoring-no-days-message {
+  font-style: italic;
+  color: #555;
+  margin-top: 8px;
+}
+
+.subject-section {
+  margin-bottom: 32px;
+}

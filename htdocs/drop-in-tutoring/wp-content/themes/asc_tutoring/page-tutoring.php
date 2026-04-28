@@ -64,6 +64,33 @@ get_header();
             <?php endif; ?>
           <?php endforeach; ?>
         </ul>
+        <div class="day-filter-strip">
+          <h3>Filter Available Days</h3>
+          <div class="day-filter-days" role="group" aria-labelledby="day-filter-label">
+            <?php
+            $days = [
+              'MON' => 'Monday',
+              'TUE' => 'Tuesday',
+              'WED' => 'Wednesday',
+              'THU' => 'Thursday',
+              'FRI' => 'Friday',
+            ];
+            foreach ($days as $code => $label):
+            ?>
+              <button
+                type="button"
+                class="button button-primary day-filter-tile active"
+                data-day="<?php echo esc_attr($code); ?>"
+                aria-pressed="true"
+              >
+                <span class="day-filter-check" aria-hidden="true">✓</span>
+                <span class="day-filter-text">
+                  <?php echo esc_html($label); ?>
+                </span>
+              </button>
+            <?php endforeach; ?>
+          </div>
+        </div>
         <?php
         $expander_id = 1000;
         foreach ($uSubjects as $subject):
@@ -73,8 +100,11 @@ get_header();
               continue;
           }
         ?>
-        <div class="subject-section" data-subject="<?php echo esc_attr($subject['subject_code']); ?>">
-          <a id="<?php echo esc_attr(tutoring_anchor_from_subject($subject)); ?>"></a>
+        <div
+          class="subject-section"
+          data-subject="<?php echo esc_attr($subject['subject_code']); ?>"
+          id="<?php echo esc_attr(tutoring_anchor_from_subject($subject)); ?>"
+        >
           <h3><?php echo tutoring_subject_heading($subject); ?></h3>
           <?php foreach ($subject_courses as $course): ?>
             <?php
